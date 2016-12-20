@@ -24,6 +24,6 @@ The high level view of e-commerce is based on Domain-Driven Design, implemented 
 ###Bibliography###
 
 I used various resources to both learn Akka itself, as well as for ideas with regard to patterns for Reactive architecture:
-[*Akka in Action*, Raymond Roestenburg, Manning](https://www.manning.com/books/akka-in-action) - Used this to learn Akka. I referenced the sample code in this book for my basic approach to setting up an Akka app in general, as well as for the cluster sharding and persistence.
-[*Reactive Design Patterns*, Roland Kuhn, Manning](https://www.manning.com/books/reactive-design-patterns) - As the title suggests, I referenced the design patterns in this book to organize the Akka code into patterns that organize concepts and make the code more understandable, refactorable and testable.
-[The online Akka documentation](http://doc.akka.io/docs/akka/2.4/scala.html) - My go-to reference.
+* [*Akka in Action*, Raymond Roestenburg, Manning](https://www.manning.com/books/akka-in-action) - Used this to learn Akka. I referenced the sample code in this book for my basic approach to setting up an Akka app in general, as well as for the cluster sharding and persistence.
+* [*Reactive Design Patterns*, Roland Kuhn, Manning](https://www.manning.com/books/reactive-design-patterns) - As the title suggests, I referenced the design patterns in this book to organize the Akka code into patterns that organize concepts and make the code more understandable, refactorable and testable.
+* [The online Akka documentation](http://doc.akka.io/docs/akka/2.4/scala.html) - My go-to reference.
