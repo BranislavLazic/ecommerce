@@ -50,7 +50,7 @@ class StockSpec extends FlatSpec with Matchers {
     itemWithHold.availableCount should be (7)
   }
 
-  it should "count multiple shopping count holds and deduct the sum from the available count" in {
+  it should "count multiple shopping count holds and deduct their sum from the available count" in {
     val item = Stock.empty.setProduct(ItemRef(UUID.randomUUID))
 
     val shipment = ShipmentRef(UUID.randomUUID, DateTime.now.plusDays(20), 10)
@@ -64,5 +64,5 @@ class StockSpec extends FlatSpec with Matchers {
     itemWith2Holds.availableCount should be (6)
   }
 
-  it should "allow the on-hold"
+  it should "allow the on-hold "
 }
