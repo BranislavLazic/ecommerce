@@ -3,13 +3,15 @@ package com.ecommerce.inventory.backend
 import java.util.UUID
 import org.joda.time.DateTime
 import Stock._
+
 /**
   * Created by lukewyman on 12/11/16.
   */
-case class Stock(product: Option[ItemRef] = None, count: Int, onHold: Map[ShoppingCartRef, Int]) {
+case class Stock(product: Option[ItemRef], count: Int, onHold: Map[ShoppingCartRef, Int]) {
 
-  def setProduct(product: ItemRef): Stock = {
-    copy(product = Some(product))
+  def setProduct(item: ItemRef): Stock = {
+    require(product.isEmpty, "product cannot be overwritten")
+    copy(product = Some(item))
   }
 
   def acceptShipment(shipment: ShipmentRef): Stock = {
@@ -21,11 +23,12 @@ case class Stock(product: Option[ItemRef] = None, count: Int, onHold: Map[Shoppi
   }
 
   def abandonCart(shoppingCart: ShoppingCartRef): Stock = {
-    Stock.empty
+    copy(onHold = onHold.filterNot({case (scr, _) => scr.id == shoppingCart.id}))
   }
 
   def checkout(shoppingCart: ShoppingCartRef): Stock = {
-    Stock.empty
+    val holdCount = onHold.get(shoppingCart).getOrElse(0)
+    copy(count = count - holdCount, onHold = onHold.filterNot({case (scr, _) => scr.id == shoppingCart.id}))
   }
 
   def availableCount: Int = {
@@ -40,5 +43,5 @@ object Stock {
   case class ShipmentRef(id: UUID, expectedDate: DateTime, count: Int)
   case class ShoppingCartRef(id: UUID)
   case class CustomerRef(id: UUID)
-  case class Reservation(customer: CustomerRef, shipmentRef: ShipmentRef, count: Int)
+  case class Reservation(customer: CustomerRef, shipmentRef: ShipmentRef)
 }
