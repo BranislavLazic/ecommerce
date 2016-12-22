@@ -11,6 +11,8 @@ object StockManager {
   def props = Props(new StockManager)
 
   def name = "stock-manager"
+
+
 }
 
 class StockManager extends PersistentActor {
