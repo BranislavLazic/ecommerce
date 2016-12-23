@@ -1,6 +1,6 @@
 package com.ecommerce.inventory.backend
 
-import Stock._
+import Identity._
 
 /**
   * Created by lukewyman on 12/21/16.

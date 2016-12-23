@@ -3,7 +3,7 @@ package com.ecommerce.inventory.backend
 import java.util.UUID
 import com.ecommerce.inventory.backend.StockMessage._
 import org.joda.time.DateTime
-import Stock._
+import Identity._
 
 /**
   * Created by lukewyman on 12/11/16.
@@ -47,10 +47,4 @@ case class Stock(product: Option[ItemRef], count: Int, onHold: Map[ShoppingCartR
 
 object Stock {
   def empty = Stock(None, 0, Map.empty)
-
-  case class ItemRef(id: UUID)
-  case class ShipmentRef(id: UUID, expectedDate: DateTime, count: Int)
-  case class ShoppingCartRef(id: UUID)
-  case class CustomerRef(id: UUID)
-  case class Reservation(customer: CustomerRef, shipmentRef: ShipmentRef)
 }

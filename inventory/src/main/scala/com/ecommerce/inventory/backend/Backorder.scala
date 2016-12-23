@@ -1,7 +1,7 @@
 package com.ecommerce.inventory.backend
 
 import java.util.UUID
-import Backorder._
+import Identity._
 import com.ecommerce.inventory.backend.BackorderMessage._
 import org.joda.time.DateTime
 
@@ -47,10 +47,4 @@ case class Backorder(product: Option[ItemRef], expectedShipments: List[ShipmentR
 object Backorder {
 
   def empty = Backorder(None, Nil, Map.empty)
-
-  case class ItemRef(id: UUID)
-  case class ShipmentRef(id: UUID, expectedDate: DateTime, count: Int)
-  case class ShoppingCartRef(id: UUID)
-  case class CustomerRef(id: UUID)
-  case class Reservation(customer: CustomerRef, shipmentRef: ShipmentRef)
 }

@@ -11,7 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Created by lukewyman on 12/11/16.
   */
 class StockSpec extends FlatSpec with Matchers {
-  import Stock._
+  import Identity._
 
   "An InventoryItem" should "set the Product when new" in {
     val stock = Stock.empty
