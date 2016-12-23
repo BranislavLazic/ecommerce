@@ -28,10 +28,8 @@ case class ShoppingCart(items: Map[ItemRef, Int], owner: Option[CustomerRef]) {
   }
 
   def applyEvent(event: Event): ShoppingCart = event match {
-    case OwnerChanged(_, owner)
-    => setOwner(owner)
-    case ItemAdded(_, item, count)
-    => addItem(item, count)
+    case OwnerChanged(_, owner) => setOwner(owner)
+    case ItemAdded(_, item, count) => addItem(item, count)
     case ItemRemoved(_, item, count) => removeItem(item, count)
   }
 }

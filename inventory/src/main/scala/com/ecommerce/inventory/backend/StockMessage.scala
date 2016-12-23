@@ -20,7 +20,7 @@ object StockMessage {
 
   sealed trait Event extends StockMessage
   case class ProductChanged(inventoryItem: ItemRef) extends Event
-  case class ShipmentAccepted(inventoryItem: ItemRef, shoppingCart: ShoppingCartRef) extends Event
+  case class ShipmentAccepted(inventoryItem: ItemRef, shipment: ShipmentRef) extends Event
   case class HeldForCustomer(inventoryItem: ItemRef, shoppingCart: ShoppingCartRef, count: Int) extends Event
   case class CartAbandoned(inventoryItem: ItemRef, shoppingCart: ShoppingCartRef) extends Event
   case class CheckedOut(inventoryItem: ItemRef, shoppingCart: ShoppingCartRef) extends Event

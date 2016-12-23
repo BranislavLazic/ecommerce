@@ -2,7 +2,7 @@ package com.ecommerce.inventory.backend
 
 import java.util.UUID
 
-import com.ecommerce.inventory.backend.Stock.{CustomerRef, Reservation, ShipmentRef, ItemRef}
+import com.ecommerce.inventory.backend.Backorder.{CustomerRef, Reservation, ShipmentRef, ItemRef}
 import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
 

@@ -1,6 +1,8 @@
 package com.ecommerce.inventory.backend
 
-import Stock._
+import java.util.UUID
+import Backorder._
+import com.ecommerce.inventory.backend.BackorderMessage._
 import org.joda.time.DateTime
 
 /**
@@ -23,7 +25,7 @@ case class Backorder(product: Option[ItemRef], expectedShipments: List[ShipmentR
     copy(reservations = reservations.updated(reservation, count))
   }
 
-  def abandonCart: Backorder = ???
+  def abandonCart(shoppingCart: ShoppingCartRef): Backorder = ???
 
   def count: Int = {
     expectedShipments.map(_.count).sum - reservations.values.sum
@@ -33,9 +35,22 @@ case class Backorder(product: Option[ItemRef], expectedShipments: List[ShipmentR
     val reservationCount = reservations.filter({ case (r, c) => r.shipmentRef.expectedDate == date }).values.sum
     expectedShipments.filter(_.expectedDate == date).map(_.count).sum - reservationCount
   }
+
+  def applyEvent(event: Event) = event match {
+    case ProductChanged(i) => setProduct(i)
+    case ShipmentAcknowledged(_, s) => acknowledgeShipment(s)
+    case ShipmentAccepted(_, s) => acceptShipment(s)
+    case CartAbandoned(_, sc) => abandonCart(sc)
+  }
 }
 
 object Backorder {
 
   def empty = Backorder(None, Nil, Map.empty)
+
+  case class ItemRef(id: UUID)
+  case class ShipmentRef(id: UUID, expectedDate: DateTime, count: Int)
+  case class ShoppingCartRef(id: UUID)
+  case class CustomerRef(id: UUID)
+  case class Reservation(customer: CustomerRef, shipmentRef: ShipmentRef)
 }

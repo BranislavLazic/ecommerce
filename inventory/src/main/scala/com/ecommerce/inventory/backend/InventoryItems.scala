@@ -25,8 +25,5 @@ class InventoryItems extends Actor {
 
   def inventoryItem = ClusterSharding(context.system).shardRegion(InventoryItem.regionName)
 
-  def receive = {
-    case cmd: Command => inventoryItem forward cmd
-    case qry: Query => inventoryItem forward qry
-  }
+  def receive = ???
 }

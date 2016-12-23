@@ -1,6 +1,6 @@
 package com.ecommerce.inventory.backend
 
-import com.ecommerce.inventory.backend.Stock.{ShoppingCartRef, Reservation, ShipmentRef, ItemRef}
+import Backorder._
 
 /**
   * Created by lukewyman on 12/21/16.

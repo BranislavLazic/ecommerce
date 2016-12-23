@@ -1,6 +1,7 @@
 package com.ecommerce.inventory.backend
 
 import java.util.UUID
+import com.ecommerce.inventory.backend.StockMessage._
 import org.joda.time.DateTime
 import Stock._
 
@@ -33,6 +34,14 @@ case class Stock(product: Option[ItemRef], count: Int, onHold: Map[ShoppingCartR
 
   def availableCount: Int = {
     count - onHold.values.sum
+  }
+
+  def applyEvent(event: Event): Stock = event match {
+    case ProductChanged(i) => setProduct(i)
+    case ShipmentAccepted(_, s) => acceptShipment(s)
+    case HeldForCustomer(_, sc, c) => holdForCustomer(sc, c)
+    case CartAbandoned(_, sc) => abandonCart(sc)
+    case CheckedOut(_, sc) => checkout(sc)
   }
 }
 
