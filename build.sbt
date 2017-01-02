@@ -58,3 +58,25 @@ lazy val shoppingcartSettings = Seq(
 )
 
 lazy val shoppingcart = project.in(file("shoppingcart")).settings(shoppingcartSettings)
+
+lazy val orchestratorSettings = Seq(
+  scalaVersion := Version.scala,
+  mainClass in Global := Some("com.ecommerce.orchestrator.Boot"),
+  assemblyJarName in assembly := "orchestrator.jar",
+  resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
+    "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
+  libraryDependencies ++= Seq(
+    Library.akkaActor,
+    Library.akkaHttp,
+    Library.akkaSlf4j,
+    Library.akkaHttpCirce,
+    Library.circeCore,
+    Library.circeGeneric,
+    Library.circeParser,
+    Library.jodaTime
+  )
+)
+
+lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSettings)
+
+lazy val ui = project.in(file("ui")).enablePlugins(PlayScala)

@@ -9,17 +9,13 @@ import com.ecommerce.inventory.backend.StockMessage._
   */
 object StockManager {
   import StockMessage._
-  import StockManager._
 
   def props = Props(new StockManager)
 
   def name = "stock-manager"
 
-  case class ManagerCommand(cmd: Command, id: Long, replyTo: ActorRef)
-  case class ManagerEvent(id: Long, event: Event)
-  case class ManagerQuery(qry: Query, id: Long, replyTo: ActorRef)
-  case class ManagerResult(id: Long, result: Result)
-  case class ManagerRejection(id: Long, reason: String)
+  case class Rejection(reason: String)
+
 }
 
 class StockManager extends PersistentActor {
@@ -30,7 +26,7 @@ class StockManager extends PersistentActor {
   var stock = Stock.empty
 
   def receiveCommand = {
-    case ManagerCommand(cmd, id, replyTo) => {
+    case cmd: Command => {
       try {
         val event = cmd match {
           case SetProduct(i) => ProductChanged(i)
@@ -41,17 +37,17 @@ class StockManager extends PersistentActor {
         stock = stock.applyEvent(event)
 
         persist(event) { _ =>
-          replyTo ! ManagerEvent(id, event)
+          sender() ! event
         }
       } catch {
-        case ex: IllegalArgumentException => replyTo ! ManagerRejection(id, ex.getMessage)
+        case ex: IllegalArgumentException => sender() ! Rejection(ex.getMessage)
       }
     }
-    case ManagerQuery(qry, id, replyTo) => {
+    case qry: Query => {
       val result = qry match {
         case GetStock(i) => GetStockResult(i)
       }
-      replyTo ! ManagerResult(id, result)
+      sender() ! result
     }
   }
 

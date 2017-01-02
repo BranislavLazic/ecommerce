@@ -54,7 +54,7 @@ trait ShoppingCartRoutes {
 
   def updateItem: Route = {
     post {
-      pathPrefix("shoppingcarts" / shoppingCartIdSegment / "items" / productIdSegment) { (shoppingCartId, productId) =>
+      pathPrefix("shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
           entity(as[AddItemCountView]) { aic =>
             val addItem = AddItem(ShoppingCartRef(shoppingCartId), ItemRef(productId), aic.count)
@@ -73,7 +73,7 @@ trait ShoppingCartRoutes {
 
   def getShoppingCart: Route = {
     get {
-      pathPrefix("shoppingcarts" / shoppingCartIdSegment) { shoppingCartId =>
+      pathPrefix("shoppingcarts" / ShoppingCartId) { shoppingCartId =>
         pathEndOrSingleSlash {
           val getItems = GetItems(ShoppingCartRef(shoppingCartId))
           onSuccess(shoppingCarts.ask(getItems).mapTo[GetItemsResult]) {
@@ -84,8 +84,12 @@ trait ShoppingCartRoutes {
     }
   }
 
-  def UUIDSegment = Segment.flatMap(id => Try {UUID.fromString(id)}.toOption)
-  val shoppingCartIdSegment = UUIDSegment
-  val productIdSegment = UUIDSegment
+  val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
+  val ProductId = IdSegment
+  val ShoppingCartId = IdSegment
+
+//  def UUIDSegment = Segment.flatMap(id => Try {UUID.fromString(id)}.toOption)
+//  val shoppingCartIdSegment = UUIDSegment
+//  val productIdSegment = UUIDSegment
 }
 

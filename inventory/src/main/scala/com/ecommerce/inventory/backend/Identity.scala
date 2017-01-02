@@ -9,9 +9,11 @@ import org.joda.time.DateTime
   */
 object Identity {
 
-  case class ItemRef(id: UUID)
-  case class ShipmentRef(id: UUID, expectedDate: DateTime, count: Int)
-  case class ShoppingCartRef(id: UUID)
-  case class CustomerRef(id: UUID)
+  sealed trait Id
+  case class ItemRef(id: UUID) extends Id
+  case class ShipmentRef(id: UUID, expectedDate: DateTime, count: Int) extends Id
+  case class ShoppingCartRef(id: UUID) extends Id
+  case class CustomerRef(id: UUID) extends Id
   case class Reservation(customer: CustomerRef, shipmentRef: ShipmentRef)
+  case class PaymentRef(id: UUID) extends Id
 }
