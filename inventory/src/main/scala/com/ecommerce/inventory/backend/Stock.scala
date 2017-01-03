@@ -2,7 +2,6 @@ package com.ecommerce.inventory.backend
 
 import java.util.UUID
 import com.ecommerce.inventory.backend.StockMessage._
-import org.joda.time.DateTime
 import Identity._
 
 /**

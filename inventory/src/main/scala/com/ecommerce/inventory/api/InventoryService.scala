@@ -1,5 +1,6 @@
 package com.ecommerce.inventory.api
 
+import java.time.ZonedDateTime
 import java.util.UUID
 import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
@@ -7,7 +8,6 @@ import akka.util.Timeout
 import akka.http.scaladsl.server.{Route, Directives}
 import akka.http.scaladsl.model.StatusCodes._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import org.joda.time.DateTime
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 import com.ecommerce.inventory.backend.Identity.{PaymentRef, ShoppingCartRef, ShipmentRef, ItemRef}
@@ -24,6 +24,7 @@ trait InventoryRoutes {
   import Directives._
   import CirceSupport._
   import io.circe.generic.auto._
+  import io.circe.java8.time._
   import RequestViews._
   import ResponseMappers._
 
@@ -72,7 +73,7 @@ trait InventoryRoutes {
       pathPrefix("items" / ItemId / "shipments") { itemId =>
         pathEndOrSingleSlash {
           entity(as[AcceptShipmentView]) { asv =>
-            val shipment = AcceptShipment(ItemRef(itemId), ShipmentRef(asv.id, DateTime.parse(asv.date), asv.count))
+            val shipment = AcceptShipment(ItemRef(itemId), ShipmentRef(asv.id, ZonedDateTime.parse(asv.date), asv.count))
             inventoryItems ! shipment
             complete(OK)
           }
@@ -87,7 +88,7 @@ trait InventoryRoutes {
         pathEndOrSingleSlash {
           entity(as[AcknowledgeShipmentView]) { asv =>
             val acknowledgement =
-              AcknowledgeShipment(ItemRef(itemId), ShipmentRef(asv.id, DateTime.parse(asv.expectedDate), asv.count))
+              AcknowledgeShipment(ItemRef(itemId), ShipmentRef(asv.id, ZonedDateTime.parse(asv.expectedDate), asv.count))
             inventoryItems ! acknowledgement
             complete(OK)
           }

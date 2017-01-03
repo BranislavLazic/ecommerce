@@ -5,11 +5,12 @@ import Identity._
 /**
   * Created by lukewyman on 12/21/16.
   */
-trait BackorderMessage {
-  def inventoryItem: ItemRef
-}
 
 object BackorderMessage {
+
+  trait BackorderMessage {
+    def inventoryItem: ItemRef
+  }
 
   sealed trait Command extends BackorderMessage
   case class SetProduct(inventoryItem: ItemRef) extends Command
@@ -18,7 +19,7 @@ object BackorderMessage {
   case class MakeReservation(inventoryItem: ItemRef, reservation: Reservation, count: Int) extends Command
   case class AbandonCart(inventoryItem: ItemRef,shoppingCart: ShoppingCartRef) extends Command
 
-  sealed trait Event extends BackorderMessage
+  sealed trait Event extends BackorderMessage with Serializable
   case class ProductChanged(inventoryItem: ItemRef) extends Event
   case class ShipmentAcknowledged(inventoryItem: ItemRef, shipment: ShipmentRef) extends Event
   case class ShipmentAccepted(inventoryItem: ItemRef, shipment: ShipmentRef) extends Event

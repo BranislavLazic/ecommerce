@@ -1,9 +1,9 @@
 package com.ecommerce.inventory.backend
 
+import java.time.ZonedDateTime
 import java.util.UUID
 import Identity._
 import com.ecommerce.inventory.backend.BackorderMessage._
-import org.joda.time.DateTime
 
 /**
   * Created by lukewyman on 12/18/16.
@@ -31,7 +31,7 @@ case class Backorder(product: Option[ItemRef], expectedShipments: List[ShipmentR
     expectedShipments.map(_.count).sum - reservations.values.sum
   }
 
-  def availableCount(date: DateTime): Int = {
+  def availableCount(date: ZonedDateTime): Int = {
     val reservationCount = reservations.filter({ case (r, c) => r.shipmentRef.expectedDate == date }).values.sum
     expectedShipments.filter(_.expectedDate == date).map(_.count).sum - reservationCount
   }

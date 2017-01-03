@@ -30,6 +30,7 @@ object Library {
   val circeCore                = "io.circe"                   %%  "circe-core"                      % Version.circe
   val circeGeneric             = "io.circe"                   %%  "circe-generic"                   % Version.circe
   val circeParser              = "io.circe"                   %%  "circe-parser"                    % Version.circe
+  val circeJava8               = "io.circe"                   %%  "circe-java8"                     % Version.circe
   val jodaTime                 = "joda-time"                  %   "joda-time"                       % Version.jodaTime
 
   val akkaTestKit              = "com.typesafe.akka"          %%  "akka-testkit"                    % Version.akka

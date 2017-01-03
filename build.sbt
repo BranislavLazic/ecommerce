@@ -22,9 +22,9 @@ lazy val inventorySettings = Seq(
     Library.circeCore,
     Library.circeGeneric,
     Library.circeParser,
+    Library.circeJava8,
     Library.leveldb,
     Library.leveldbJni,
-    Library.jodaTime,
     Library.scalaTest % "test"
   )
 )

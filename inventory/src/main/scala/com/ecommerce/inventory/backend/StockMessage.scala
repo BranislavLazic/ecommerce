@@ -5,11 +5,13 @@ import Identity._
 /**
   * Created by lukewyman on 12/21/16.
   */
-trait StockMessage {
-  def inventoryItem: ItemRef
-}
 
 object StockMessage {
+
+  trait StockMessage {
+    def inventoryItem: ItemRef
+  }
+
 
   sealed trait Command extends StockMessage
   case class SetProduct(inventoryItem: ItemRef) extends Command
@@ -18,7 +20,7 @@ object StockMessage {
   case class AbandonCart(inventoryItem: ItemRef, shoppingCart: ShoppingCartRef) extends Command
   case class Checkout(inventoryItem: ItemRef, shoppingCart: ShoppingCartRef) extends Command
 
-  sealed trait Event extends StockMessage
+  sealed trait Event extends StockMessage with Serializable
   case class ProductChanged(inventoryItem: ItemRef) extends Event
   case class ShipmentAccepted(inventoryItem: ItemRef, shipment: ShipmentRef) extends Event
   case class HeldForCustomer(inventoryItem: ItemRef, shoppingCart: ShoppingCartRef, count: Int) extends Event

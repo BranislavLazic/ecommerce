@@ -2,8 +2,8 @@ package com.ecommerce.inventory.backend
 
 import java.lang.IllegalArgumentException
 import java.net.URI
+import java.time.ZonedDateTime
 import java.util.UUID
-import org.joda.time.DateTime
 
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -35,7 +35,7 @@ class StockSpec extends FlatSpec with Matchers {
   it should "increase the in-stock count when a shipment is accepted" in {
     val item = Stock.empty.setProduct(ItemRef(UUID.randomUUID))
 
-    val shipment = ShipmentRef(UUID.randomUUID, DateTime.now.plusDays(20), 10)
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val updatedItem = item.acceptShipment(shipment)
 
     updatedItem.count should be (10)
@@ -45,7 +45,7 @@ class StockSpec extends FlatSpec with Matchers {
   it should "decrease the available count and maintain the in-stock count when placed in a shopping cart" in {
     val item = Stock.empty.setProduct(ItemRef(UUID.randomUUID))
 
-    val shipment = ShipmentRef(UUID.randomUUID, DateTime.now.plusDays(20), 10)
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val updatedItem = item.acceptShipment(shipment)
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
     val itemWithHold = updatedItem.holdForCustomer(shoppingCart, 3)
@@ -55,7 +55,7 @@ class StockSpec extends FlatSpec with Matchers {
   }
 
   it should "count multiple shopping cart holds and deduct their sum from the available count" in {
-    val shipment = ShipmentRef(UUID.randomUUID, DateTime.now.plusDays(20), 10)
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val stock = Stock.empty.setProduct(ItemRef(UUID.randomUUID)).acceptShipment(shipment)
 
     val shoppingCart1 = ShoppingCartRef(UUID.randomUUID)
@@ -68,7 +68,7 @@ class StockSpec extends FlatSpec with Matchers {
   }
 
   it should "update the count on hold for a customer when their shopping cart is updated" in {
-    val shipment = ShipmentRef(UUID.randomUUID, DateTime.now.plusDays(20), 10)
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val stock = Stock.empty.setProduct(ItemRef(UUID.randomUUID)).acceptShipment(shipment)
 
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
@@ -80,7 +80,7 @@ class StockSpec extends FlatSpec with Matchers {
   }
 
   it should "increment the available count if a customer abandons their shopping cart" in {
-    val shipment = ShipmentRef(UUID.randomUUID, DateTime.now.plusDays(20), 10)
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val stock = Stock.empty.setProduct(ItemRef(UUID.randomUUID)).acceptShipment(shipment)
 
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
@@ -92,7 +92,7 @@ class StockSpec extends FlatSpec with Matchers {
   }
 
   it should "decrement the in-stock count if a customer checks out" in {
-    val shipment = ShipmentRef(UUID.randomUUID, DateTime.now.plusDays(20), 10)
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val stock = Stock.empty.setProduct(ItemRef(UUID.randomUUID)).acceptShipment(shipment)
 
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
