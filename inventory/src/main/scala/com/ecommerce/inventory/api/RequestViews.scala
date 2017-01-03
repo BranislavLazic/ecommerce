@@ -10,8 +10,8 @@ import com.ecommerce.inventory.backend.InventoryItem.GetItemResult
 object RequestViews {
   case class CreateItemView(id: UUID)
   case class HoldItemsView(stockCount: Int, backorderCount: Int)
-  case class AcceptShipmentView(id: UUID, date: String, count: Int)
-  case class AcknowledgeShipmentView(id: UUID, expectedDate: String, count: Int)
+  case class AcceptShipmentView(id: UUID, date: ZonedDateTime, count: Int)
+  case class AcknowledgeShipmentView(id: UUID, expectedDate: ZonedDateTime, count: Int)
   case class PaymentView(id: UUID)
 }
 

@@ -73,7 +73,7 @@ trait InventoryRoutes {
       pathPrefix("items" / ItemId / "shipments") { itemId =>
         pathEndOrSingleSlash {
           entity(as[AcceptShipmentView]) { asv =>
-            val shipment = AcceptShipment(ItemRef(itemId), ShipmentRef(asv.id, ZonedDateTime.parse(asv.date), asv.count))
+            val shipment = AcceptShipment(ItemRef(itemId), ShipmentRef(asv.id, asv.date, asv.count))
             inventoryItems ! shipment
             complete(OK)
           }
@@ -88,7 +88,7 @@ trait InventoryRoutes {
         pathEndOrSingleSlash {
           entity(as[AcknowledgeShipmentView]) { asv =>
             val acknowledgement =
-              AcknowledgeShipment(ItemRef(itemId), ShipmentRef(asv.id, ZonedDateTime.parse(asv.expectedDate), asv.count))
+              AcknowledgeShipment(ItemRef(itemId), ShipmentRef(asv.id, asv.expectedDate, asv.count))
             inventoryItems ! acknowledgement
             complete(OK)
           }
