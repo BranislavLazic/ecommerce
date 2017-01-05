@@ -7,11 +7,11 @@ import akka.pattern.ask
 import akka.util.Timeout
 import akka.http.scaladsl.server.{Route, Directives}
 import akka.http.scaladsl.model.StatusCodes._
+import com.ecommerce.inventory.backend.InventoryItemManager._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import scala.concurrent.ExecutionContext
 import scala.util.Try
-import com.ecommerce.inventory.backend.Identity.{PaymentRef, ShoppingCartRef, ShipmentRef, ItemRef}
-import com.ecommerce.inventory.backend.InventoryItem._
+import com.ecommerce.inventory.backend.domain.Identity._
 
 /**
   * Created by lukewyman on 12/18/16.
@@ -102,10 +102,23 @@ trait InventoryRoutes {
       pathPrefix("items" / ItemId / "shoppingcarts" / ShoppingCartId) { (itemId, shoppingCartId) =>
         pathEndOrSingleSlash {
           entity(as[HoldItemsView]) { hold =>
-            val holdItems = HoldItems(ItemRef(itemId), ShoppingCartRef(shoppingCartId), hold.stockCount, hold.backorderCount)
-            inventoryItems ! holdItems
+            val holdItem = HoldItem(ItemRef(itemId), ShoppingCartRef(shoppingCartId), hold.count)
+            inventoryItems ! holdItem
             complete(OK)
           }
+        }
+      }
+    }
+  }
+
+  def reserveItem: Route = {
+    post {
+      pathPrefix("items" / ItemId / "customers" / CustomerId) { (itemId, customerId) =>
+        entity(as[MakeReservationView]) { mrv =>
+          val makeReservation = MakeReservation(ItemRef(itemId),
+            ReservationRef(CustomerRef(customerId), ShipmentRef(mrv.shipmentId, ZonedDateTime.now, 0)), mrv.count)
+          inventoryItems ! makeReservation
+          complete(OK)
         }
       }
     }
@@ -115,7 +128,7 @@ trait InventoryRoutes {
     delete {
       pathPrefix("items" / ItemId / "shoppingcarts" / ShoppingCartId) { (itemId, shoppingCartId) =>
         pathEndOrSingleSlash {
-          val release = ReleaseItems(ItemRef(itemId), ShoppingCartRef(shoppingCartId))
+          val release = AbandonCart(ItemRef(itemId), ShoppingCartRef(shoppingCartId))
           inventoryItems ! release
           complete(OK)
         }
@@ -140,4 +153,5 @@ trait InventoryRoutes {
   val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
   val ItemId = IdSegment
   val ShoppingCartId = IdSegment
+  val CustomerId = IdSegment
 }

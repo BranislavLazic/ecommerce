@@ -3,13 +3,14 @@ package com.ecommerce.inventory.api
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import com.ecommerce.inventory.backend.InventoryItem.GetItemResult
+import com.ecommerce.inventory.backend.InventoryItemManager.GetItemResult
 /**
   * Created by lukewyman on 12/18/16.
   */
 object RequestViews {
   case class CreateItemView(id: UUID)
-  case class HoldItemsView(stockCount: Int, backorderCount: Int)
+  case class HoldItemsView(count: Int)
+  case class MakeReservationView(shipmentId: UUID, count: Int)
   case class AcceptShipmentView(id: UUID, date: ZonedDateTime, count: Int)
   case class AcknowledgeShipmentView(id: UUID, expectedDate: ZonedDateTime, count: Int)
   case class PaymentView(id: UUID)

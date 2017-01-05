@@ -1,18 +1,11 @@
-package com.ecommerce.inventory.backend
+package com.ecommerce.inventory.backend.domain
 
-import java.util.UUID
-import com.ecommerce.inventory.backend.StockMessage._
-import Identity._
+import Identity.{ShipmentRef, ShoppingCartRef}
 
 /**
   * Created by lukewyman on 12/11/16.
   */
-case class Stock(product: Option[ItemRef], count: Int, onHold: Map[ShoppingCartRef, Int]) {
-
-  def setProduct(item: ItemRef): Stock = {
-    require(product.isEmpty, "product cannot be overwritten")
-    copy(product = Some(item))
-  }
+case class Stock(count: Int, onHold: Map[ShoppingCartRef, Int]) {
 
   def acceptShipment(shipment: ShipmentRef): Stock = {
     copy(count = shipment.count)
@@ -35,15 +28,8 @@ case class Stock(product: Option[ItemRef], count: Int, onHold: Map[ShoppingCartR
     count - onHold.values.sum
   }
 
-  def applyEvent(event: Event): Stock = event match {
-    case ProductChanged(i) => setProduct(i)
-    case ShipmentAccepted(_, s) => acceptShipment(s)
-    case HeldForCustomer(_, sc, c) => holdForCustomer(sc, c)
-    case CartAbandoned(_, sc) => abandonCart(sc)
-    case CheckedOut(_, sc) => checkout(sc)
-  }
 }
 
 object Stock {
-  def empty = Stock(None, 0, Map.empty)
+  def empty = Stock(0, Map.empty)
 }

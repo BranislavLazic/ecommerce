@@ -1,4 +1,4 @@
-package com.ecommerce.inventory.backend
+package com.ecommerce.inventory.backend.domain
 
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -13,6 +13,6 @@ object Identity {
   case class ShipmentRef(id: UUID, expectedDate: ZonedDateTime, count: Int) extends Id
   case class ShoppingCartRef(id: UUID) extends Id
   case class CustomerRef(id: UUID) extends Id
-  case class Reservation(customer: CustomerRef, shipmentRef: ShipmentRef)
+  case class ReservationRef(customer: CustomerRef, shipmentRef: ShipmentRef) extends Id
   case class PaymentRef(id: UUID) extends Id
 }
