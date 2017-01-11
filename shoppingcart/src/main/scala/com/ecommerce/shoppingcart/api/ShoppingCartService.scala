@@ -87,9 +87,5 @@ trait ShoppingCartRoutes {
   val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
   val ProductId = IdSegment
   val ShoppingCartId = IdSegment
-
-//  def UUIDSegment = Segment.flatMap(id => Try {UUID.fromString(id)}.toOption)
-//  val shoppingCartIdSegment = UUIDSegment
-//  val productIdSegment = UUIDSegment
 }
 
