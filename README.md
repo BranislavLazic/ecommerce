@@ -5,7 +5,7 @@ e-commerce is a sample project to show-case my skills in Scala and Akka. This pr
 ##Skills Demonstrated##
 * **Scala** - The Scala language, best-practices and core features, functional programming, good, clean code.
 * **Akka** - Skills so far include, Clustering, Cluster Sharding, Persistence, Akka HTTP. Also concurrency with Futures, and ask/piping patterns. Still on the lookout to demonstrate skills with other Akka features, such as Routing and Supervision.
-* **Kafka** - (_not yet_) Kafka will be soon be a star of this project. I plan to use it for communications between Microservices that are NOT direct effects of user interactions (for example, Shipping sending a notification to Inventory when a Shipment of an item is received.
+* **Kafka** - (_not yet_) Kafka will be soon be a star of this project. I plan to use it for communications between Microservices that are NOT direct effects of user interactions (for example, Shipping sending a notification to Inventory when a Shipment of an item is received. or fulfillment messages being queued up to be coonsumed by both the OrderTracking and Inventory modules)
 * **Akka Streams** - (_not yet_) Akka Streams will be used for back-pressure where Akka actors are consuming messages off a Kafka topic.
 * **Cassandra** - not envisioning any amazing in-depth Cassandra modeling in this project (at least not yet), but C* is the store for Akka Persistence in this project.
 * **REST** - all Microservice APIs are RESTful, implemented with Akka HTTP. They're a little sparse right now, but I will continue to enrich them to use REST fully, such as appropriate responses for Posts, resource links, etc.
