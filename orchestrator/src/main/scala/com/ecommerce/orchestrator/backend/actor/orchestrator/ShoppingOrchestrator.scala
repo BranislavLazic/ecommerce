@@ -31,14 +31,5 @@ class ShoppingOrchestrator extends Actor {
   def shoppingCartClient = context.actorOf(ShoppingCartClient.props, ShoppingCartClient.name)
   def inventoryClient = context.actorOf(InventoryClient.props, InventoryClient.name)
 
-  def receive = {
-    case StartShopping(scid, cid) =>
-      shoppingCartClient ! CreateShoppingCart(scid, cid)
-    case BuyItem(scid, iid, c) =>
-      shoppingCartClient ! PlaceInCart(scid, iid, c)
-      inventoryClient ! HoldItem(iid, scid, c)
-    case ReserveItem(scid, cid, iid, c) =>
-      shoppingCartClient ! PlaceInCart(scid, iid, c)
-      inventoryClient ! MakeReservation(iid, cid, c)
-  }
+  def receive = ???
 }
