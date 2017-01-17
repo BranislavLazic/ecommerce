@@ -20,7 +20,6 @@ import scala.concurrent.{Future, ExecutionContext}
 trait HttpClient {
   import HttpClient._
 
-
   implicit def system: ActorSystem
   implicit def executionContext: ExecutionContext
   val http = Http(system)

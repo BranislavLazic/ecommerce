@@ -36,7 +36,7 @@ trait InventoryRoutes {
   def routes: Route =
     checkout ~
     abandonCart ~
-    placeItemInCart ~
+    holdItem ~
     acceptShipment ~
     acknowledgeShipment ~
     getItem ~
@@ -44,7 +44,7 @@ trait InventoryRoutes {
 
   def createItem: Route = {
     post {
-      pathPrefix("shoppingcarts") {
+      pathPrefix("items") {
         pathEndOrSingleSlash {
           entity(as[CreateItemView]) { civ =>
             val setProduct = SetProduct(ItemRef(civ.id))
@@ -97,7 +97,7 @@ trait InventoryRoutes {
     }
   }
 
-  def placeItemInCart: Route = {
+  def holdItem: Route = {
     post {
       pathPrefix("items" / ItemId / "shoppingcarts" / ShoppingCartId) { (itemId, shoppingCartId) =>
         pathEndOrSingleSlash {

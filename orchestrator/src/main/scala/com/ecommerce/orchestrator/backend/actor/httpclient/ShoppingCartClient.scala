@@ -57,31 +57,28 @@ trait ShoppingCartHttpClient extends HttpClient {
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[ShoppingCartView](r)
     }
-
     source.via(flow).runWith(Sink.head)
   }
 
-  def createShoppingCart(requestView: RequestView): Future[HttpClientResult[ShoppingCartView]] = {
+  def createShoppingCart(cscv: CreateShoppingCartView): Future[HttpClientResult[ShoppingCartView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
-      entity = HttpEntity(ContentTypes.`application/json`, requestView.asJson.toString()),
+      entity = HttpEntity(ContentTypes.`application/json`, cscv.asJson.toString()),
       uri = Uri(path = Path("/shoppingcarts"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[ShoppingCartView](r)
     }
-
     source.via(flow).runWith(Sink.head)
   }
 
-  def addItem(shoppingCartId: UUID, itemId: UUID, requestView: RequestView): Future[HttpClientResult[ShoppingCartView]] = {
+  def addItem(shoppingCartId: UUID, itemId: UUID, aiv: AddItemView): Future[HttpClientResult[ShoppingCartView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
-      entity = HttpEntity(ContentTypes.`application/json`, requestView.asJson.toString()),
+      entity = HttpEntity(ContentTypes.`application/json`, aiv.asJson.toString()),
       uri = Uri(path = Path(s"/shoppingcarts/${shoppingCartId}/items/${itemId}"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[ShoppingCartView](r)
     }
-
     source.via(flow).runWith(Sink.head)
   }
 }

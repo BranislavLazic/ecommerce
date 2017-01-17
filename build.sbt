@@ -51,6 +51,7 @@ lazy val shoppingcartSettings = Seq(
     Library.circeCore,
     Library.circeGeneric,
     Library.circeParser,
+    Library.circeJava8,
     Library.leveldb,
     Library.leveldbJni,
     Library.scalaTest % "test"
@@ -73,6 +74,7 @@ lazy val orchestratorSettings = Seq(
     Library.circeCore,
     Library.circeGeneric,
     Library.circeParser,
+    Library.circeJava8,
     Library.jodaTime
   )
 )
