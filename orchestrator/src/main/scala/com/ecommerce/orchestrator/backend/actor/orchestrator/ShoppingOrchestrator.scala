@@ -3,8 +3,7 @@ package com.ecommerce.orchestrator.backend.actor.orchestrator
 import java.util.UUID
 
 import akka.actor.{Actor, Props}
-import com.ecommerce.orchestrator.backend.actor.httpclient.InventoryClient.HoldItem
-import com.ecommerce.orchestrator.backend.actor.httpclient.{InventoryClient, ShoppingCartClient, PaymentClient}
+import com.ecommerce.clientactors.http.{InventoryClient, ShoppingCartClient, PaymentClient}
 
 /**
   * Created by lukewyman on 1/1/17.

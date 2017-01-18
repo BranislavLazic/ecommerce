@@ -1,9 +1,9 @@
-package com.ecommerce.orchestrator.backend.actor.httpclient
+package com.ecommerce.clientactors.http
 
 import akka.actor.{Actor, Props}
 
 /**
-  * Created by lukewyman on 1/1/17.
+  * Created by lukewyman on 1/17/17.
   */
 object PaymentClient {
 

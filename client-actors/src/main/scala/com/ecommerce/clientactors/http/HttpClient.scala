@@ -1,21 +1,16 @@
-package com.ecommerce.orchestrator.backend.actor.httpclient
-
-import java.util.UUID
+package com.ecommerce.clientactors.http
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
-import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.{ActorMaterializerSettings, ActorMaterializer}
-import com.ecommerce.orchestrator.backend.actor.httpclient.ResponseViews.{ResponseView, ShoppingCartView}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.{Future, ExecutionContext}
 
+
 /**
-  * Created by lukewyman on 1/15/17.
+  * Created by lukewyman on 1/17/17.
   */
 trait HttpClient {
   import HttpClient._

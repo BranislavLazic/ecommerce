@@ -1,4 +1,4 @@
-package com.ecommerce.orchestrator.backend.actor.httpclient
+package com.ecommerce.clientactors.http
 
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -7,13 +7,12 @@ import akka.actor.{ActorLogging, Props, Actor}
 import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Sink, Source}
-import com.ecommerce.orchestrator.backend.actor.httpclient.HttpClient.HttpClientResult
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-
+import com.ecommerce.clientactors.http.HttpClient.HttpClientResult
 import scala.concurrent.Future
 
 /**
-  * Created by lukewyman on 1/10/17.
+  * Created by lukewyman on 1/17/17.
   */
 object InventoryClient {
 
@@ -152,3 +151,4 @@ trait InventoryHttpClient extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 }
+

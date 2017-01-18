@@ -6,6 +6,7 @@ object Version {
   final val akkaHttp = "10.0.0"
   final val akkaHttpCirce = "1.11.0"
   final val akkaPersistenceCassandra = "0.22"
+  final val akkaStreamKafka = "0.13"
   final val scalaTest = "3.0.0"
   final val commonsIO = "2.4"
   final val logbackClassic = "1.1.2"
@@ -22,7 +23,8 @@ object Library {
   val akkaClusterTools         = "com.typesafe.akka"          %%  "akka-cluster-tools"              % Version.akka
   val akkaClusterSharding      = "com.typesafe.akka"          %%  "akka-cluster-sharding"           % Version.akka
   val akkaSlf4j                = "com.typesafe.akka"          %%  "akka-slf4j"                      % Version.akka
-  val akkaPersistenceCassandra = "com.typesafe.akka"          %% "akka-persistence-cassandra"       % Version.akkaPersistenceCassandra
+  val akkaPersistenceCassandra = "com.typesafe.akka"          %%  "akka-persistence-cassandra"      % Version.akkaPersistenceCassandra
+  val akkaStreamKafka          = "com.typesafe.akka"          %%  "akka-stream-kafka"               % Version.akkaStreamKafka
   val commonsIO                = "commons-io"                 %   "commons-io"                      % Version.commonsIO
   val logbackClassic           = "ch.qos.logback"             %   "logback-classic"                 % Version.logbackClassic
   val akkaHttp                 = "com.typesafe.akka"          %%  "akka-http"                       % Version.akkaHttp

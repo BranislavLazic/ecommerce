@@ -1,10 +1,10 @@
-package com.ecommerce.orchestrator.backend.actor.httpclient
+package com.ecommerce.clientactors.http
 
 import java.time.ZonedDateTime
 import java.util.UUID
 
 /**
-  * Created by lukewyman on 1/15/17.
+  * Created by lukewyman on 1/17/17.
   */
 object RequestViews {
   sealed trait RequestView

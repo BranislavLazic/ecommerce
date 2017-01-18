@@ -1,7 +1,25 @@
 lazy val ecommerce =
   project
     .in(file("."))
-    .aggregate(inventory, shoppingcart)
+    .aggregate(inventory, shoppingcart, orchestrator, `client-actors`)
+
+lazy val clientactorsSettings = Seq(
+  scalaVersion := Version.scala,
+  libraryDependencies ++= Seq(
+    Library.akkaActor,
+    Library.akkaHttp,
+    Library.akkaSlf4j,
+    Library.akkaStreamKafka,
+    Library.logbackClassic,
+    Library.akkaHttpCirce,
+    Library.circeCore,
+    Library.circeGeneric,
+    Library.circeParser,
+    Library.circeJava8
+  )
+)
+
+lazy val `client-actors` = project.in(file("client-actors")).settings(clientactorsSettings)
 
 lazy val inventorySettings = Seq(
   scalaVersion := Version.scala,
@@ -79,6 +97,6 @@ lazy val orchestratorSettings = Seq(
   )
 )
 
-lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSettings)
+lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSettings).dependsOn(`client-actors`)
 
 lazy val ui = project.in(file("ui")).enablePlugins(PlayScala)
