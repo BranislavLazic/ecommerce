@@ -14,6 +14,7 @@ object Version {
   final val leveldb = "0.7"
   final val leveldbJni = "1.8"
   final val jodaTime = "2.9.6"
+  final val cats = "0.9.0"
 }
 
 object Library {
@@ -34,6 +35,7 @@ object Library {
   val circeParser              = "io.circe"                   %%  "circe-parser"                    % Version.circe
   val circeJava8               = "io.circe"                   %%  "circe-java8"                     % Version.circe
   val jodaTime                 = "joda-time"                  %   "joda-time"                       % Version.jodaTime
+  val cats                     = "org.typelevel"              %%  "cats"                            % Version.cats
 
   val akkaTestKit              = "com.typesafe.akka"          %%  "akka-testkit"                    % Version.akka
   val akkaMultiNodeTestkit     = "com.typesafe.akka"          %%  "akka-multi-node-testkit"         % Version.akka

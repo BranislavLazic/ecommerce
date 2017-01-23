@@ -14,9 +14,9 @@ import scala.concurrent.Future
 /**
   * Created by lukewyman on 1/17/17.
   */
-object InventoryClient {
+object InventoryHttpClient {
 
-  def props = Props(new InventoryClient)
+  def props = Props(new InventoryHttpClient)
 
   def name = "inventory-client"
 
@@ -26,12 +26,12 @@ object InventoryClient {
   case class AcknowledgeShipment(itemId: UUID, shipmentId: UUID, expectedDate: ZonedDateTime, count: Int)
   case class HoldItem(itemId: UUID, shoppingCartId: UUID, count: Int)
   case class ReserveItem(itemId: UUID, customerId: UUID, count: Int)
-  case class AbandonCart(itemId: UUID, shoppingCartId: UUID)
-  case class Checkout(itemId: UUID, shoppingCartId: UUID, paymentId: UUID)
+  case class ReleaseItem(itemId: UUID, shoppingCartId: UUID)
+  case class ClaimItem(itemId: UUID, shoppingCartId: UUID, paymentId: UUID)
 }
 
-class InventoryClient extends Actor with ActorLogging with InventoryHttpClient {
-  import InventoryClient._
+class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClientApi {
+  import InventoryHttpClient._
   import RequestViews._
   import akka.pattern.pipe
   implicit def executionContext = context.dispatcher
@@ -50,14 +50,14 @@ class InventoryClient extends Actor with ActorLogging with InventoryHttpClient {
       holdItem(iid, scid, HoldItemView(c)).pipeTo(sender())
     case ReserveItem(iid, cid, c) =>
       reserveItem(iid, ReserveItemView(cid, c)).pipeTo(sender())
-    case AbandonCart(iid, scid) =>
+    case ReleaseItem(iid, scid) =>
       abandonCart(iid, scid).pipeTo(sender())
-    case Checkout(iid, scid, pid) =>
+    case ClaimItem(iid, scid, pid) =>
       checkout(iid, scid, CheckoutView(pid)).pipeTo(sender())
   }
 }
 
-trait InventoryHttpClient extends HttpClient {
+trait InventoryHttpClientApi extends HttpClient {
   import CirceSupport._
   import io.circe.generic.auto._
   import io.circe.syntax._

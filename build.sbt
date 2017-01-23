@@ -93,7 +93,8 @@ lazy val orchestratorSettings = Seq(
     Library.circeGeneric,
     Library.circeParser,
     Library.circeJava8,
-    Library.jodaTime
+    Library.jodaTime,
+    Library.cats
   )
 )
 

@@ -24,6 +24,7 @@ object RequestViews {
 
 object ResponseViews {
   sealed trait ResponseView
-  case class ShoppingCartView(shoppingCartId: UUID) extends ResponseView
+  case class ShoppingCartView(shoppingCartId: UUID, items: List[ShoppingCartItemView]) extends ResponseView
+  case class ShoppingCartItemView(itemId: UUID, count: Int)
   case class InventoryItemView(ItemId: UUID) extends ResponseView
 }

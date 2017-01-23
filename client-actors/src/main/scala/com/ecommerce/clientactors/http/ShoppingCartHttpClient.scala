@@ -13,19 +13,20 @@ import com.ecommerce.clientactors.http.HttpClient.HttpClientResult
 /**
   * Created by lukewyman on 1/17/17.
   */
-object ShoppingCartClient {
+object ShoppingCartHttpClient {
 
-  def props = Props(new ShoppingCartClient)
+  def props = Props(new ShoppingCartHttpClient)
 
   def name = "shoppingcart-manager"
 
   case class GetShoppingCart(id: UUID)
   case class CreateShoppingCart(shoppingCartId: UUID, customerId: UUID)
   case class AddItem(shoppingCartId: UUID, itemId: UUID, count: Int)
+  case class ClearCart(shoppingCartId: UUID)
 }
 
-class ShoppingCartClient extends Actor with ActorLogging with ShoppingCartHttpClient {
-  import ShoppingCartClient._
+class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHttpClientApi {
+  import ShoppingCartHttpClient._
   import RequestViews._
   import akka.pattern.pipe
   implicit def executionContext = context.dispatcher
@@ -42,7 +43,7 @@ class ShoppingCartClient extends Actor with ActorLogging with ShoppingCartHttpCl
 
 }
 
-trait ShoppingCartHttpClient extends HttpClient {
+trait ShoppingCartHttpClientApi extends HttpClient {
   import CirceSupport._
   import io.circe.generic.auto._
   import io.circe.syntax._

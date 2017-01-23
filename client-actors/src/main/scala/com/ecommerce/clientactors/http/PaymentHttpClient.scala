@@ -5,17 +5,17 @@ import akka.actor.{Actor, Props}
 /**
   * Created by lukewyman on 1/17/17.
   */
-object PaymentClient {
+object PaymentHttpClient {
 
-  def props = Props(new PaymentClient)
+  def props = Props(new PaymentHttpClient)
 
   def name = "payment-manager"
 
   case class Pay(creditCard: String)
 }
 
-class PaymentClient extends Actor{
-  import PaymentClient._
+class PaymentHttpClient extends Actor {
+  import PaymentHttpClient._
 
   def receive = {
     case Pay(cc) =>
