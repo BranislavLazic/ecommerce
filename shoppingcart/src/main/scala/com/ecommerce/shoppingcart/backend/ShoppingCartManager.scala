@@ -1,6 +1,6 @@
 package com.ecommerce.shoppingcart.backend
 
-import akka.actor.Props
+import akka.actor.{ActorLogging, Props}
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
 
@@ -36,15 +36,17 @@ object ShoppingCartManager {
   private val hexDigits = "0123456789ABCDEF"
 }
 
-class ShoppingCartManager extends PersistentActor {
+class ShoppingCartManager extends PersistentActor with ActorLogging {
   import ShoppingCartManager.Rejection
 
   override def persistenceId = context.self.path.name
+  log.info(s"Persistence Id: $persistenceId")
 
   var shoppingCart = ShoppingCart.empty
 
   def receiveCommand = {
     case cmd: Command =>
+      log.info(s"receiveCommand $cmd")
       try {
         val event = cmd match {
           case SetOwner(cart, owner) => OwnerChanged(cart, owner)
@@ -71,6 +73,8 @@ class ShoppingCartManager extends PersistentActor {
   }
 
   def receiveRecover = {
-    case e: Event => shoppingCart = shoppingCart.applyEvent(e)
+    case e: Event =>
+      log.info(s"receiveRecover event: $e")
+      shoppingCart = shoppingCart.applyEvent(e)
   }
 }

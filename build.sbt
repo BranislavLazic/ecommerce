@@ -72,7 +72,8 @@ lazy val shoppingcartSettings = Seq(
     Library.circeJava8,
     Library.leveldb,
     Library.leveldbJni,
-    Library.scalaTest % "test"
+    Library.scalaTest % "test",
+    Library.akkaTestKit % "test"
   )
 )
 

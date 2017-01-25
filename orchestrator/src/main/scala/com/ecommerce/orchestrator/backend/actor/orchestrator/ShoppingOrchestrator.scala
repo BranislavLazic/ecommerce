@@ -28,7 +28,7 @@ object ShoppingOrchestrator {
   case class ReserveItem(shoppingCartId: UUID, customerId: UUID, itemId: UUID, count: Int)
 }
 
-class ShoppingOrchestrator extends Actor with ShoppingOrchestratorAop {
+class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
   import akka.pattern.pipe
   import ShoppingOrchestrator._
 
@@ -47,7 +47,7 @@ class ShoppingOrchestrator extends Actor with ShoppingOrchestratorAop {
   }
 }
 
-trait ShoppingOrchestratorAop { this: Actor =>
+trait ShoppingOrchestratorApi { this: Actor =>
   import akka.pattern.ask
   import HttpClient._
   import InventoryKafkaClient._
