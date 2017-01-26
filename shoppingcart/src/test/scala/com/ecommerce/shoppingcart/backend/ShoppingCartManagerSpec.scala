@@ -28,8 +28,9 @@ class ShoppingCartManagerSpec extends PersistenceSpec(ActorSystem("test")) with 
       expectMsg(GetItemsResult(shoppingCartId, Map((item1 -> 1), (item2 -> 3))))
       killActors(shoppingCartManager)
     }
+
     "replay events on recovery and reach the correct state" in {
-      
+
     }
   }
 }

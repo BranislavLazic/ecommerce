@@ -38,11 +38,11 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
     updatedCart.items should contain (item -> 1)
   }
 
-  it should "increase the count of items in a cart" in {
+  it should "update the count of an existing item in a cart" in {
     val item = ItemRef(UUID.randomUUID)
     val cart = ShoppingCart.empty.addItem(item, 1)
 
-    val updatedCart = cart.addItem(item, 2)
+    val updatedCart = cart.addItem(item, 3)
 
     updatedCart.items should contain (item -> 3)
   }
@@ -51,18 +51,9 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
     val item = ItemRef(UUID.randomUUID)
     val cart = ShoppingCart.empty.addItem(item, 1)
 
-    val updatedCart = cart.removeItem(item, 1)
+    val updatedCart = cart.removeItem(item)
 
     updatedCart.items shouldBe empty
-  }
-
-  it should "decrease the count of items in a cart" in {
-    val item = ItemRef(UUID.randomUUID)
-    val cart = ShoppingCart.empty.addItem(item, 5)
-
-    val updatedCart = cart.removeItem(item, 2)
-
-    updatedCart.items should contain (item -> 3)
   }
 
   it should "not allow a negative count of items to be added" in {
@@ -77,19 +68,5 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
     val cart = ShoppingCart.empty
 
     an [IllegalArgumentException] should be thrownBy cart.addItem(item, 0)
-  }
-
-  it should "not allow a negative count of items to be removed" in {
-    val item = ItemRef(UUID.randomUUID)
-    val cart = ShoppingCart.empty
-
-    an [IllegalArgumentException] should be thrownBy cart.removeItem(item, -1)
-  }
-
-  it should "not allow a zero count of items to be removed" in {
-    val item = ItemRef(UUID.randomUUID)
-    val cart = ShoppingCart.empty
-
-    an [IllegalArgumentException] should be thrownBy cart.removeItem(item, 0)
   }
 }

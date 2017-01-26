@@ -6,6 +6,7 @@ import akka.persistence.PersistentActor
 
 /**
   * Created by lukewyman on 12/16/16.
+  * Domain Pattern and Cluster Sharding from "Reactive Design Patterns", Manning
   */
 object ShoppingCartManager {
   import ShoppingCart._
@@ -51,7 +52,7 @@ class ShoppingCartManager extends PersistentActor with ActorLogging {
         val event = cmd match {
           case SetOwner(cart, owner) => OwnerChanged(cart, owner)
           case AddItem(cart, item, count) => ItemAdded(cart, item, count)
-          case RemoveItem(cart, item, count) => ItemRemoved(cart, item, count)
+          case RemoveItem(cart, item) => ItemRemoved(cart, item)
         }
         shoppingCart = shoppingCart.applyEvent(event)
 

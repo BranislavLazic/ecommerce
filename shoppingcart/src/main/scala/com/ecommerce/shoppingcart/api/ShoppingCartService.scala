@@ -53,19 +53,26 @@ trait ShoppingCartRoutes {
   }
 
   def updateItem: Route = {
-    post {
+    put {
       pathPrefix("shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
           entity(as[AddItemCountView]) { aic =>
             val addItem = AddItem(ShoppingCartRef(shoppingCartId), ItemRef(productId), aic.count)
             shoppingCarts ! addItem
             complete(OK)
-          } ~
-          entity(as[RemoveItemCountView]) { ric =>
-            val removeItem = RemoveItem(ShoppingCartRef(shoppingCartId), ItemRef(productId), ric.count)
-            shoppingCarts ! removeItem
-            complete(OK)
           }
+        }
+      }
+    }
+  }
+
+  def removeItem: Route = {
+    delete {
+      pathPrefix("shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
+        pathEndOrSingleSlash {
+          val removeItem = RemoveItem(ShoppingCartRef(shoppingCartId), ItemRef(productId))
+          shoppingCarts ! removeItem
+          complete(OK)
         }
       }
     }

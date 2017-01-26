@@ -15,22 +15,18 @@ case class ShoppingCart(items: Map[ItemRef, Int], owner: Option[CustomerRef]) {
 
   def addItem(item: ItemRef, count: Int): ShoppingCart = {
     require(count > 0, s"count must be positive - trying to add $item with $count")
-    val currentCount = items.get(item).getOrElse(0)
-    copy(items = items.updated(item, currentCount + count))
+    copy(items = items.updated(item, count))
   }
 
-  def removeItem(item: ItemRef, count: Int): ShoppingCart = {
-    require(count > 0, s"count must be positive = trying to remove $item with $count")
-    val currentCount = items.get(item).getOrElse(0)
-    val newCount = currentCount - count
-    if (newCount <= 0) copy(items = items - item)
-    else copy(items = items.updated(item, newCount))
+  def removeItem(item: ItemRef): ShoppingCart = {
+    require(items.keys.exists(_.equals(item)), s"item $item cannot be removed as it doesn't exist")
+    copy(items = items.filterNot(_._1.equals(item)))
   }
 
   def applyEvent(event: Event): ShoppingCart = event match {
     case OwnerChanged(_, owner) => setOwner(owner)
     case ItemAdded(_, item, count) => addItem(item, count)
-    case ItemRemoved(_, item, count) => removeItem(item, count)
+    case ItemRemoved(_, item) => removeItem(item)
   }
 }
 

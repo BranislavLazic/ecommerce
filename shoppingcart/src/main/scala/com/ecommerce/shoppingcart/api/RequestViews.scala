@@ -13,7 +13,6 @@ object RequestViews {
   case class CreateShoppingCartView(shoppingCartId: UUID, customerId: UUID)
   case class RemoveItemView(itemId: UUID, count: Int)
   case class AddItemCountView(count: Int)
-  case class RemoveItemCountView(count: Int)
 }
 
 object ResponseViews {
