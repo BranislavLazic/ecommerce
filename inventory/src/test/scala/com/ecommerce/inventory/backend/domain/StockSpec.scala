@@ -11,12 +11,12 @@ import org.scalatest.{FlatSpec, Matchers}
 class StockSpec extends FlatSpec with Matchers {
   import Identity._
 
-  it should "increase the in-stock count when a shipment is accepted" in {
+  "A Stock" should "increase the in-stock count when a shipment is accepted" in {
     val stock = Stock.empty
     val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val updatedStock = stock.acceptShipment(shipment)
 
-    updatedStock.count should be (10)
+    updatedStock.inStock should be (10)
     updatedStock.availableCount should be (10)
   }
 
@@ -26,9 +26,9 @@ class StockSpec extends FlatSpec with Matchers {
     val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 10)
     val updatedStock = stock.acceptShipment(shipment)
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
-    val stockWithHold = updatedStock.holdForCustomer(shoppingCart, 3)
+    val stockWithHold = updatedStock.placeHold(shoppingCart, 3)
 
-    stockWithHold.count should be (10)
+    stockWithHold.inStock should be (10)
     stockWithHold.availableCount should be (7)
   }
 
@@ -37,11 +37,11 @@ class StockSpec extends FlatSpec with Matchers {
     val stock = Stock.empty.acceptShipment(shipment)
 
     val shoppingCart1 = ShoppingCartRef(UUID.randomUUID)
-    val stockWithHold = stock.holdForCustomer(shoppingCart1, 3)
+    val stockWithHold = stock.placeHold(shoppingCart1, 3)
     val shoppingCart2 = ShoppingCartRef(UUID.randomUUID)
-    val stockWith2Holds = stockWithHold.holdForCustomer(shoppingCart2, 1)
+    val stockWith2Holds = stockWithHold.placeHold(shoppingCart2, 1)
 
-    stockWith2Holds.count should be (10)
+    stockWith2Holds.inStock should be (10)
     stockWith2Holds.availableCount should be (6)
   }
 
@@ -50,10 +50,10 @@ class StockSpec extends FlatSpec with Matchers {
     val stock = Stock.empty.acceptShipment(shipment)
 
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
-    val stockWithHold = stock.holdForCustomer(shoppingCart, 3)
-    val stockWithUpdatedHold = stockWithHold.holdForCustomer(shoppingCart, 5)
+    val stockWithHold = stock.placeHold(shoppingCart, 3)
+    val stockWithUpdatedHold = stockWithHold.placeHold(shoppingCart, 5)
 
-    stockWithUpdatedHold.count should be (10)
+    stockWithUpdatedHold.inStock should be (10)
     stockWithUpdatedHold.availableCount should be (5)
   }
 
@@ -62,10 +62,10 @@ class StockSpec extends FlatSpec with Matchers {
     val stock = Stock.empty.acceptShipment(shipment)
 
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
-    val stockWithHold = stock.holdForCustomer(shoppingCart, 3)
-    val stockAfterAbandonment = stockWithHold.abandonCart(shoppingCart)
+    val stockWithHold = stock.placeHold(shoppingCart, 3)
+    val stockAfterAbandonment = stockWithHold.releaseHold(shoppingCart)
 
-    stockAfterAbandonment.count should be (10)
+    stockAfterAbandonment.inStock should be (10)
     stockAfterAbandonment.availableCount should be (10)
   }
 
@@ -74,10 +74,26 @@ class StockSpec extends FlatSpec with Matchers {
     val stock = Stock.empty.acceptShipment(shipment)
 
     val shoppingCart = ShoppingCartRef(UUID.randomUUID)
-    val stockWithHold = stock.holdForCustomer(shoppingCart, 3)
-    val stockAfterCheckout = stockWithHold.checkout(shoppingCart)
+    val stockWithHold = stock.placeHold(shoppingCart, 3)
+    val stockAfterCheckout = stockWithHold.claimItem(shoppingCart)
 
-    stockAfterCheckout.count should be (7)
-    stockAfterCheckout.count should be (7)
+    stockAfterCheckout.inStock should be (7)
+    stockAfterCheckout.inStock should be (7)
+  }
+
+  it should "not allow a Hold to placed that is greater than the in stock amount" in {
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 3)
+    val stock = Stock.empty.acceptShipment(shipment)
+
+    val cart = ShoppingCartRef(UUID.randomUUID())
+    an [IllegalArgumentException] should be thrownBy(stock.placeHold(cart, 5))
+  }
+
+  it should "not allow a Hold to be claimed that does not exist" in {
+    val shipment = ShipmentRef(UUID.randomUUID, ZonedDateTime.now.plusDays(20), 3)
+    val stock = Stock.empty.acceptShipment(shipment)
+
+    val cart = ShoppingCartRef(UUID.randomUUID())
+    an [IllegalArgumentException] should be thrownBy(stock.claimItem(cart))
   }
 }

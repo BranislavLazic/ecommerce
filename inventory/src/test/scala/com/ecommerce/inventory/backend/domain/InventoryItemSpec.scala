@@ -3,7 +3,8 @@ package com.ecommerce.inventory.backend.domain
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import com.ecommerce.inventory.backend.domain.Identity.ItemRef
+import com.ecommerce.inventory.backend.InventoryItemManager.{CheckedOut, ItemHeld, ProductChanged}
+import com.ecommerce.inventory.backend.domain.Identity.{ShoppingCartRef, ItemRef}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -29,4 +30,17 @@ class InventoryItemSpec extends FlatSpec with Matchers {
     an [IllegalArgumentException] should be thrownBy item.setProduct(otherProduct)
   }
 
+  it should "apply the ProductChanged event" in {
+    val product = ItemRef(UUID.randomUUID())
+    val item = InventoryItem.empty.applyEvent(ProductChanged(product))
+
+    item.product match {
+      case None => fail("InventoryItem doesn't specify a product")
+      case Some(p) => p should be theSameInstanceAs product
+    }
+  }
+
+  it should "apply events for checking out" in {
+
+  }
 }

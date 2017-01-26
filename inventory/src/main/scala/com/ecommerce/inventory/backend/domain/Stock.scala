@@ -5,27 +5,29 @@ import Identity.{ShipmentRef, ShoppingCartRef}
 /**
   * Created by lukewyman on 12/11/16.
   */
-case class Stock(count: Int, onHold: Map[ShoppingCartRef, Int]) {
+case class Stock(inStock: Int, onHold: Map[ShoppingCartRef, Int]) {
 
   def acceptShipment(shipment: ShipmentRef): Stock = {
-    copy(count = shipment.count)
+    copy(inStock = shipment.count)
   }
 
-  def holdForCustomer(shoppingCart: ShoppingCartRef, count: Int): Stock = {
+  def placeHold(shoppingCart: ShoppingCartRef, count: Int): Stock = {
+    require(inStock >= count, s"inStock of $inStock is not sufficient to cover Hold of count $count")
     copy(onHold = onHold.updated(shoppingCart, count))
   }
 
-  def abandonCart(shoppingCart: ShoppingCartRef): Stock = {
-    copy(onHold = onHold.filterNot({case (scr, _) => scr.id == shoppingCart.id}))
+  def releaseHold(shoppingCart: ShoppingCartRef): Stock = {
+    copy(onHold = onHold.filterNot({ case (scr, _) => scr.id == shoppingCart.id }))
   }
 
-  def checkout(shoppingCart: ShoppingCartRef): Stock = {
+  def claimItem(shoppingCart: ShoppingCartRef): Stock = {
+    require(onHold.contains(shoppingCart), s"no Hold to claim for ShoppingCart $shoppingCart")
     val holdCount = onHold.get(shoppingCart).getOrElse(0)
-    copy(count = count - holdCount, onHold = onHold.filterNot({case (scr, _) => scr.id == shoppingCart.id}))
+    copy(inStock = inStock - holdCount, onHold = onHold.filterNot({ case (scr, _) => scr.id == shoppingCart.id }))
   }
 
   def availableCount: Int = {
-    count - onHold.values.sum
+    inStock - onHold.values.sum
   }
 
 }

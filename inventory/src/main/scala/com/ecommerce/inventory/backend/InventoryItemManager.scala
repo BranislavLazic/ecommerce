@@ -32,7 +32,7 @@ object InventoryItemManager {
   case class ItemHeld(item: ItemRef, shoppingCart: ShoppingCartRef, count: Int) extends Event
   case class ReservationMade(item: ItemRef, reservation: ReservationRef, count: Int) extends Event
   case class CheckedOut(item: ItemRef, shoppingCart: ShoppingCartRef, payment: PaymentRef) extends Event
-  case class CartAbandoned(item: ItemRef, shoppingCart: ShoppingCartRef) extends Event
+  case class CartAbandoned(item: ItemRef, shoppingCart: ShoppingCartRef, customer: CustomerRef) extends Event
   case class ShipmentAccepted(item: ItemRef, shipment: ShipmentRef) extends Event
   case class ShipmentAcknowledged(item: ItemRef, shipment: ShipmentRef) extends Event
 
