@@ -16,7 +16,7 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
     val customer = new CustomerRef(UUID.randomUUID)
     val ownedCart = cart.setOwner(customer)
 
-    ownedCart.owner.map(customer => customer should be theSameInstanceAs customer)
+    ownedCart.owner.fold(fail("shoppingcart doesn't specify an owner"))(_ should be theSameInstanceAs customer)
   }
 
   it should "not allow the owner to be set if there already is an owner" in {

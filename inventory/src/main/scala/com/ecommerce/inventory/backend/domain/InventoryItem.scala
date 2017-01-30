@@ -16,6 +16,7 @@ case class InventoryItem(product: Option[ItemRef], stock: Stock, backorder: Back
   def applyEvent(event: Event): InventoryItem = event match {
     case ProductChanged(i) => setProduct(i)
     case ItemHeld(_, sh, c) => copy(stock = stock.placeHold(sh, c))
+    case ReservationMade(_, r, c) => copy(backorder = backorder.makeReservation(r, c))
     case CheckedOut(_, sc, _) => copy(stock = stock.claimItem(sc))
     case CartAbandoned(_, sc, c) => copy(stock = stock.releaseHold(sc), backorder = backorder.releaseReservation(c))
     case ShipmentAccepted(_, sh) => copy(stock = stock.acceptShipment(sh), backorder = backorder.acceptShipment(sh))
