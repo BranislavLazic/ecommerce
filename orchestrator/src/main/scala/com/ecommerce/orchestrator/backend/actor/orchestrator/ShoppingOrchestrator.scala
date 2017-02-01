@@ -42,10 +42,10 @@ class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
   def receive = {
     case BuyItem(scid, iid, c) =>
       val bf = EitherT(holdInventory(scid, iid, c))
-        .flatMapF(iv => addItem(iv.shoppingCartId, iv.itemId, iv.count))
+        .flatMapF(iv => addItem(scid, iid, iv.count))
       bf.value.pipeTo(sender())
     case ReserveItem(scid, cid, iid, c) =>
-      val rf = EitherT(null)
+
     case AbandonCart(scid) =>
       val scf = EitherT(getShoppingCart(scid))
       scf.map(sc => sc.items.foreach(i => releaseInventory(scid, i.itemId)))
@@ -82,7 +82,4 @@ trait ShoppingOrchestratorApi { this: Actor =>
 
   def holdInventory(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[HoldItemView]] = ???
 
-  def reseerveInventory(shoppingCartId: UUID, customerId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[]] = ???
-
-  def makePayment()
 }
