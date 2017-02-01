@@ -69,13 +69,13 @@ trait ShoppingOrchestratorApi { this: Actor =>
   def paymentClient: ActorRef
   def shoppingCartClient: ActorRef
 
-  def getShoppingCart(shoppingCartId: UUID): Future[Either[HttpClientError, ShoppingCartView]] =
-    shoppingCartClient.ask(GetShoppingCart(shoppingCartId)).mapTo[Either[HttpClientError, ShoppingCartView]]
+  def getShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] =
+    shoppingCartClient.ask(GetShoppingCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
 
   def addItem(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[AddItemView]] =
     shoppingCartClient.ask(AddItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[AddItemView]]
 
-  def clearShoppingCart(shoppingCartId: UUID): Future[Either[HttpClientError, ShoppingCartView]] =
+  def clearShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(ClearCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
 
   def releaseInventory(shoppingCartId: UUID, itemId: UUID) = inventoryClient ! ReleaseItem(itemId, shoppingCartId)
