@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, Actor, Props}
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.implicits._
+import com.ecommerce.clientactors.http.RequestViews.{HoldItemView, AddItemView}
 import com.ecommerce.clientactors.http._
 import com.ecommerce.clientactors.kafka._
 
@@ -39,10 +40,17 @@ class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
   def shoppingCartClient = context.actorOf(ShoppingCartHttpClient.props, ShoppingCartHttpClient.name)
 
   def receive = {
+    case BuyItem(scid, iid, c) =>
+      val bf = EitherT(holdInventory(scid, iid, c))
+        .flatMapF(iv => addItem(iv.shoppingCartId, iv.itemId, iv.count))
+      bf.value.pipeTo(sender())
+    case ReserveItem(scid, cid, iid, c) =>
+      val rf = EitherT(null)
     case AbandonCart(scid) =>
       val scf = EitherT(getShoppingCart(scid))
       scf.map(sc => sc.items.foreach(i => releaseInventory(scid, i.itemId)))
       scf.flatMapF(sc => clearShoppingCart(sc.shoppingCartId)).value.pipeTo(sender())
+    case Checkout(scid) =>
 
   }
 }
@@ -64,9 +72,17 @@ trait ShoppingOrchestratorApi { this: Actor =>
   def getShoppingCart(shoppingCartId: UUID): Future[Either[HttpClientError, ShoppingCartView]] =
     shoppingCartClient.ask(GetShoppingCart(shoppingCartId)).mapTo[Either[HttpClientError, ShoppingCartView]]
 
-  def releaseInventory(shoppingCartId: UUID, itemId: UUID) = inventoryClient ! ReleaseItem(itemId, shoppingCartId)
+  def addItem(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[AddItemView]] =
+    shoppingCartClient.ask(AddItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[AddItemView]]
 
   def clearShoppingCart(shoppingCartId: UUID): Future[Either[HttpClientError, ShoppingCartView]] =
     shoppingCartClient.ask(ClearCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
 
+  def releaseInventory(shoppingCartId: UUID, itemId: UUID) = inventoryClient ! ReleaseItem(itemId, shoppingCartId)
+
+  def holdInventory(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[HoldItemView]] = ???
+
+  def reseerveInventory(shoppingCartId: UUID, customerId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[]] = ???
+
+  def makePayment()
 }

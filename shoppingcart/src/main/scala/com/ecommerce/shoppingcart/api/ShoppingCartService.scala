@@ -7,7 +7,7 @@ import akka.util.Timeout
 import akka.http.scaladsl.server.{Route, Directives}
 import akka.http.scaladsl.model.StatusCodes._
 import com.ecommerce.shoppingcart.backend.ShoppingCart.{ItemRef, CustomerRef, ShoppingCartRef}
-import com.ecommerce.shoppingcart.backend.{SetOwner, AddItem, RemoveItem, GetItems, GetItemsResult}
+import com.ecommerce.shoppingcart.backend._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.ExecutionContext
@@ -44,8 +44,7 @@ trait ShoppingCartRoutes {
         pathEndOrSingleSlash {
           entity(as[CreateShoppingCartView]) { cscv =>
             val setOwner = SetOwner(ShoppingCartRef(cscv.shoppingCartId), CustomerRef(cscv.customerId))
-            shoppingCarts ! setOwner
-            complete(OK)
+            getRoute(setOwner)
           }
         }
       }
@@ -58,8 +57,7 @@ trait ShoppingCartRoutes {
         pathEndOrSingleSlash {
           entity(as[AddItemCountView]) { aic =>
             val addItem = AddItem(ShoppingCartRef(shoppingCartId), ItemRef(productId), aic.count)
-            shoppingCarts ! addItem
-            complete(OK)
+            getRoute(addItem)
           }
         }
       }
@@ -71,8 +69,7 @@ trait ShoppingCartRoutes {
       pathPrefix("shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
           val removeItem = RemoveItem(ShoppingCartRef(shoppingCartId), ItemRef(productId))
-          shoppingCarts ! removeItem
-          complete(OK)
+          getRoute(removeItem)
         }
       }
     }
@@ -83,13 +80,17 @@ trait ShoppingCartRoutes {
       pathPrefix("shoppingcarts" / ShoppingCartId) { shoppingCartId =>
         pathEndOrSingleSlash {
           val getItems = GetItems(ShoppingCartRef(shoppingCartId))
-          onSuccess(shoppingCarts.ask(getItems).mapTo[GetItemsResult]) {
-            case result => complete(mapToShoppingCartView(result))
-          }
+          getRoute(getItems)
         }
       }
     }
   }
+
+  def getRoute(msg: ShoppingCartMessage) =
+    onSuccess(shoppingCarts.ask(msg).mapTo[ManagerResponse]) {
+      case gscr: GetShoppingCartResult => complete(OK, mapToShoppingCartView(gscr.shoppingCartId, gscr.shoppingCart))
+      case Rejection(reason) => complete(BadRequest, reason)
+    }
 
   val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
   val ProductId = IdSegment

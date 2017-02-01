@@ -1,8 +1,11 @@
 package com.ecommerce.shoppingcart.backend
 
+import java.util.UUID
+
 import akka.actor.{ActorLogging, Props}
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
+import com.ecommerce.shoppingcart.backend.ShoppingCart.ShoppingCartRef
 
 /**
   * Created by lukewyman on 12/16/16.
@@ -14,18 +17,16 @@ object ShoppingCartManager {
   def props = Props(new ShoppingCartManager)
   def name(scr: ShoppingCartRef) = scr.id.toString
 
-  case class Rejection(reason: String)
-
   val regionName: String = "shoppingcarts"
 
   val extractEntityId: ShardRegion.ExtractEntityId = {
-    case cmd: Command => (cmd.shoppingCart.id.toString, cmd)
-    case qry: Query => (qry.shoppingCart.id.toString, qry)
+    case cmd: Command => (cmd.shoppingCartId.id.toString, cmd)
+    case qry: Query => (qry.shoppingCartId.id.toString, qry)
   }
 
   val extractShardId: ShardRegion.ExtractShardId = {
-    case cmd: Command => toHex(cmd.shoppingCart.id.hashCode & 255)
-    case qry: Query => toHex(qry.shoppingCart.id.hashCode & 255)
+    case cmd: Command => toHex(cmd.shoppingCartId.id.hashCode & 255)
+    case qry: Query => toHex(qry.shoppingCartId.id.hashCode & 255)
   }
 
   private def toHex(b: Int) =
@@ -38,7 +39,6 @@ object ShoppingCartManager {
 }
 
 class ShoppingCartManager extends PersistentActor with ActorLogging {
-  import ShoppingCartManager.Rejection
 
   override def persistenceId = context.self.path.name
   log.info(s"Persistence Id: $persistenceId")
@@ -57,7 +57,7 @@ class ShoppingCartManager extends PersistentActor with ActorLogging {
         shoppingCart = shoppingCart.applyEvent(event)
 
         persist(event) { _ =>
-          sender() ! event
+          sender() ! GetShoppingCartResult(ShoppingCartRef(UUID.fromString(persistenceId)), shoppingCart)
         }
       } catch {
         case ex: IllegalArgumentException => sender() ! Rejection(ex.getMessage)
@@ -65,7 +65,7 @@ class ShoppingCartManager extends PersistentActor with ActorLogging {
     case qry: Query =>
       try {
         val result = qry match {
-          case GetItems(cart) => GetItemsResult(cart, shoppingCart.items)
+          case GetItems(id) => GetShoppingCartResult(id, shoppingCart)
         }
         sender() ! result
       } catch {

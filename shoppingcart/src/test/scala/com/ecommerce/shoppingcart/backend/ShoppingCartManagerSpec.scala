@@ -19,13 +19,13 @@ class ShoppingCartManagerSpec extends PersistenceSpec(ActorSystem("test")) with 
       val shoppingCartManager = system.actorOf(ShoppingCartManager.props, ShoppingCartManager.name(shoppingCartId))
 
       shoppingCartManager ! SetOwner(shoppingCartId, customerId)
-      expectMsg(OwnerChanged(shoppingCartId, customerId))
+      expectMsg(GetShoppingCartResult(shoppingCartId, ShoppingCart(Map.empty, Some(customerId))))
       shoppingCartManager ! AddItem(shoppingCartId, item1, 1)
-      expectMsg(ItemAdded(shoppingCartId, item1, 1))
+      expectMsg(GetShoppingCartResult(shoppingCartId, ShoppingCart(Map((item1 -> 1)), Some(customerId))))
       shoppingCartManager ! AddItem(shoppingCartId, item2, 3)
-      expectMsg(ItemAdded(shoppingCartId, item2, 3))
+      expectMsg(GetShoppingCartResult(shoppingCartId, ShoppingCart(Map((item1 -> 1), (item2 -> 3)), Some(customerId))))
       shoppingCartManager ! GetItems(shoppingCartId)
-      expectMsg(GetItemsResult(shoppingCartId, Map((item1 -> 1), (item2 -> 3))))
+      expectMsg(GetShoppingCartResult(shoppingCartId, ShoppingCart(Map((item1 -> 1), (item2 -> 3)), Some(customerId))))
       killActors(shoppingCartManager)
     }
 
