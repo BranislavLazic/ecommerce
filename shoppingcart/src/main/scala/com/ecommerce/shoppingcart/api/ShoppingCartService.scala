@@ -34,7 +34,7 @@ trait ShoppingCartRoutes {
   implicit def executionContext: ExecutionContext
 
   def routes: Route =
-    updateItem ~
+    addItem ~
     getShoppingCart ~
     createShoppingCart
 
@@ -51,7 +51,7 @@ trait ShoppingCartRoutes {
     }
   }
 
-  def updateItem: Route = {
+  def addItem: Route = {
     put {
       pathPrefix("shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
@@ -90,7 +90,7 @@ trait ShoppingCartRoutes {
     onSuccess(shoppingCarts.ask(msg).mapTo[ManagerResponse]) {
       case gscr: GetShoppingCartResult => complete(OK, mapToShoppingCartView(gscr.shoppingCartId, gscr.shoppingCart))
       case Rejection(reason) => complete(BadRequest, reason)
-    }
+  }
 
   val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
   val ProductId = IdSegment

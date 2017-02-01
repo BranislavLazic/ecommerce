@@ -8,5 +8,11 @@ import java.util.UUID
 object RequestViews {
 
   case class CheckoutView(shoppingcartId: UUID, shippingAddress: String, creditCard: String)
+}
+
+object ResponseViews {
+
 
 }
+
+
