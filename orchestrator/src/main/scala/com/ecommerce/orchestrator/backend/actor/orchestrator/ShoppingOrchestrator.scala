@@ -24,9 +24,9 @@ object ShoppingOrchestrator {
 
   case class StartShopping(shoppingCartId: UUID, customerId: UUID)
   case class AbandonCart(shoppingCartId: UUID)
-  case class Checkout(shoppingCartId: UUID)
-  case class BuyItem(shoppingCartId: UUID, itemId: UUID, count: Int)
-  case class ReserveItem(shoppingCartId: UUID, customerId: UUID, itemId: UUID, count: Int)
+  case class Checkout(shoppingCartId: UUID, creditCard: String)
+  case class PlaceInCart(shoppingCartId: UUID, itemId: UUID, count: Int, backorder: Boolean)
+  case class RemoveFromCart(shoppingCartId: UUID, itemId: UUID)
 }
 
 class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
@@ -40,17 +40,15 @@ class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
   def shoppingCartClient = context.actorOf(ShoppingCartHttpClient.props, ShoppingCartHttpClient.name)
 
   def receive = {
-    case BuyItem(scid, iid, c) =>
+    case PlaceInCart(scid, iid, c, bo) =>
       val bf = EitherT(holdInventory(scid, iid, c))
         .flatMapF(iv => addItem(scid, iid, iv.count))
       bf.value.pipeTo(sender())
-    case ReserveItem(scid, cid, iid, c) =>
-
     case AbandonCart(scid) =>
       val scf = EitherT(getShoppingCart(scid))
       scf.map(sc => sc.items.foreach(i => releaseInventory(scid, i.itemId)))
       scf.flatMapF(sc => clearShoppingCart(sc.shoppingCartId)).value.pipeTo(sender())
-    case Checkout(scid) =>
+    case Checkout(scid, cc) =>
 
   }
 }

@@ -53,7 +53,7 @@ class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClie
     case ReleaseItem(iid, scid) =>
       abandonCart(iid, scid).pipeTo(sender())
     case ClaimItem(iid, scid, pid) =>
-      checkout(iid, scid, CheckoutView(pid)).pipeTo(sender())
+      checkout(iid, scid, CheckoutView("")).pipeTo(sender())
   }
 }
 

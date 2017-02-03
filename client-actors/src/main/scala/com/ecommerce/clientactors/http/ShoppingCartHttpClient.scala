@@ -22,6 +22,7 @@ object ShoppingCartHttpClient {
   case class GetShoppingCart(id: UUID)
   case class CreateShoppingCart(shoppingCartId: UUID, customerId: UUID)
   case class AddItem(shoppingCartId: UUID, itemId: UUID, count: Int)
+  case class RemoveItem(shoppingCartId: UUID, itemID: UUID, count: Int)
   case class ClearCart(shoppingCartId: UUID)
 }
 
@@ -38,7 +39,7 @@ class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHt
     case CreateShoppingCart(scid, cid) =>
       createShoppingCart(CreateShoppingCartView(scid, cid)).pipeTo(sender())
     case AddItem(scid, iid, c) =>
-      addItem(scid, iid, AddItemView(c)).pipeTo(sender())
+      addItem(scid, iid, AddItemView(c, false)).pipeTo(sender())
   }
 
 }

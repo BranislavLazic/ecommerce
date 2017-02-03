@@ -27,16 +27,18 @@ trait HttpClient {
       case StatusCodes.NotFound => Future(Left(NotFound(r.entity.toString)))
       case StatusCodes.BadRequest => Future(Left(BadRequest(r.entity.toString)))
       case StatusCodes.Unauthorized => Future(Left(Unauthorized(r.entity.toString)))
-      case _ => Future(Left(UnexpectedStatusCode(r.status)))
+      case _ => Future(Left(UnexpectedStatusCode(s"unexpected error with sstatus: ${r.status}")))
     }
 }
 
 object HttpClient {
   type HttpClientResult[T] = Either[HttpClientError, T]
 
-  sealed trait HttpClientError
+  sealed trait HttpClientError {
+    def error: String
+  }
   case class NotFound(error: String) extends HttpClientError
   case class BadRequest(error: String) extends HttpClientError
   case class Unauthorized(error: String) extends HttpClientError
-  case class UnexpectedStatusCode(statusCode: StatusCode) extends HttpClientError
+  case class UnexpectedStatusCode(error: String) extends HttpClientError
 }
