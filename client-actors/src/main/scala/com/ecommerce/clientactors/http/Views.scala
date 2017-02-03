@@ -16,6 +16,7 @@ object RequestViews {
   case class HoldItemView(count: Int) extends RequestView
   case class ReserveItemView(customerId: UUID, count: Int) extends RequestView
   case class CheckoutView(creditCard: String) extends RequestView
+  case class ClaimItemView(shoppingCartId: UUID, itemId: UUID) extends RequestView
 
   // ShoppingCart
   case class CreateShoppingCartView(shoppingCartId: UUID, customerId: UUID) extends RequestView

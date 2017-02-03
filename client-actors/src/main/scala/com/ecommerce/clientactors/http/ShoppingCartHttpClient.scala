@@ -22,7 +22,7 @@ object ShoppingCartHttpClient {
   case class GetShoppingCart(id: UUID)
   case class CreateShoppingCart(shoppingCartId: UUID, customerId: UUID)
   case class AddItem(shoppingCartId: UUID, itemId: UUID, count: Int)
-  case class RemoveItem(shoppingCartId: UUID, itemID: UUID, count: Int)
+  case class RemoveItem(shoppingCartId: UUID, itemID: UUID)
   case class ClearCart(shoppingCartId: UUID)
 }
 
