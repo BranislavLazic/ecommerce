@@ -34,7 +34,12 @@ trait ShoppingRoutes {
   implicit def requestTimeout: Timeout
   implicit def executionContext: ExecutionContext
 
-  def shoppingRoutes: Route = ???
+  def shoppingRoutes: Route =
+    startShopping ~
+    placeInCart ~
+    removeFromCart ~
+    abandonCart ~
+    checkout
 
   def startShopping: Route = {
     post {
