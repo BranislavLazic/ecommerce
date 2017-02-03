@@ -43,8 +43,6 @@ trait ShoppingRoutes {
           val orchestrator = system.actorOf(ShoppingOrchestrator.props, ShoppingOrchestrator.name)
           val ss = StartShopping(UUID.randomUUID(), customerId)
           onSuccess(orchestrator.ask(ss).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
-            val test: Either[String, String] = Right("test")
-            complete(test)
             result.fold(complete(BadRequest, _), complete(OK, _))
           }
         }
