@@ -58,9 +58,9 @@ class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
       scf.map(sc => sc.items.foreach(i => releaseInventory(scid, i.itemId)))
       scf.flatMapF(sc => clearShoppingCart(sc.shoppingCartId)).value.pipeTo(sender())
     case Checkout(scid, cc) =>
-      /*  what should happen here is that an Order should be created, and the Order with it's OrderStatus
+      /* what should happen here is that an Order should be created, and the Order with it's OrderStatus
         should be returned to the caller. Returning the ShoppingCartView is a stop-gap until the Order
-        microservice is built out.And, yes, I know that payment/amount due is woefully over-simplified here*/
+        microservice is built out.And, yes, I know that payment/amount due is woefully over-simplified here */
       val scF = EitherT(getShoppingCart(scid))
       val pF = EitherT(pay(cc))
       val result = for {
