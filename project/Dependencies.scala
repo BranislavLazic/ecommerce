@@ -44,3 +44,38 @@ object Library {
   val leveldb                  = "org.iq80.leveldb"           %   "leveldb"                       % Version.leveldb
   val leveldbJni               = "org.fusesource.leveldbjni"  %   "leveldbjni-all"                % Version.leveldbJni
 }
+
+object Groupings {
+  val akkaBasics = Seq(
+    Library.akkaActor,
+    Library.akkaSlf4j,
+    Library.commonsIO,
+    Library.logbackClassic,
+    Library.akkaTestKit % "test"
+  )
+
+  val akkaPersistence = Seq(
+    Library.akkaPersistence,
+    Library.leveldb,
+    Library.leveldbJni
+  )
+
+  val akkaCluster = Seq(
+    Library.akkaCluster,
+    Library.akkaClusterTools,
+    Library.akkaClusterSharding,
+    Library.akkaMultiNodeTestkit
+  )
+
+  val akkaHttp = Seq(
+    Library.akkaHttp,
+    Library.akkaHttpCirce
+  )
+
+  val circe = Seq(
+    Library.circeCore,
+    Library.circeGeneric,
+    Library.circeParser,
+    Library.circeJava8
+  )
+}

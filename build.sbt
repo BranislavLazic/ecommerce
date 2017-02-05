@@ -6,18 +6,10 @@ lazy val ecommerce =
 
 lazy val clientactorsSettings = Seq(
   scalaVersion := Version.scala,
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaHttp,
-    Library.akkaSlf4j,
-    Library.akkaStreamKafka,
-    Library.logbackClassic,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaHttp ++
+    Groupings.circe
 )
 
 lazy val `client-actors` = project.in(file("client-actors")).settings(clientactorsSettings)
@@ -56,25 +48,15 @@ lazy val inventorySettings = Seq(
   assemblyJarName in assembly := "inventory.jar",
   resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
     "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaCluster,
-    Library.akkaClusterSharding,
-    Library.akkaClusterTools,
-    Library.akkaPersistence,
-    Library.akkaHttp,
-    Library.akkaSlf4j,
-    Library.commonsIO,
-    Library.logbackClassic,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8,
-    Library.leveldb,
-    Library.leveldbJni,
-    Library.scalaTest % "test"
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaPersistence ++
+    Groupings.akkaCluster ++
+    Groupings.akkaHttp ++
+    Groupings.circe  ++
+    Seq(
+      Library.scalaTest % "test"
+    )
 )
 
 lazy val inventory = project.in(file("inventory")).settings(inventorySettings)
@@ -84,19 +66,12 @@ lazy val orderTrackingSettings = Seq(
   scalaVersion := Version.scala,
   mainClass in Global := Some("com.ecommerce.ordertracking.Boot"),
   assemblyJarName in assembly := "ordertracking.jar",
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaCluster,
-    Library.akkaClusterSharding,
-    Library.akkaClusterTools,
-    Library.akkaPersistence,
-    Library.akkaHttp,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaCluster ++
+    Groupings.akkaPersistence ++
+    Groupings.akkaHttp ++
+    Groupings.circe
 )
 
 lazy val `order-tracking` = project.in(file("order-tracking")).settings(orderTrackingSettings)
@@ -106,15 +81,10 @@ lazy val paymentSettings = Seq(
   scalaVersion := Version.scala,
   mainClass in Global := Some("com.ecommerce.payment.Boot"),
   assemblyJarName in assembly := "payment.jar",
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaHttp,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaHttp ++
+    Groupings.circe
 )
 
 lazy val payment = project.in(file("payment")).settings(paymentSettings)
@@ -124,11 +94,12 @@ lazy val productcatalogSettings = Seq(
   scalaVersion := Version.scala,
   mainClass in Global := Some("com.ecommerce.productcatalog.Boot"),
   assemblyJarName in assembly := "productcatalog.jar",
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaHttp,
-    Library.akkaHttpCirce
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaHttp ++
+    Groupings.circe ++ Seq(
+      Library.scalaTest % "test"
+    )
 )
 
 lazy val `product-catalog` = project.in(file("product-catalog")).settings(productcatalogSettings)
@@ -138,16 +109,14 @@ lazy val receivingSettings = Seq(
   scalaVersion := Version.scala,
   mainClass in Global := Some("com.ecommerce.receiving.Boot"),
   assemblyJarName in assembly := "receiving.jar",
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaHttp,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaPersistence ++
+    Groupings.akkaCluster ++
+    Groupings.akkaHttp ++
+    Groupings.circe
 )
+
 
 lazy val receiving = project.in(file("receiving")).settings(receivingSettings)
 
@@ -156,15 +125,11 @@ lazy val shippingSettings = Seq(
   scalaVersion := Version.scala,
   mainClass in Global := Some("com.ecommerce.shipping.Boot"),
   assemblyJarName in assembly := "shipping.jar",
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaHttp,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+      Groupings.akkaPersistence ++
+      Groupings.akkaHttp ++
+      Groupings.circe
 )
 
 lazy val shipping = project.in(file("shipping")).settings(shippingSettings)
@@ -176,26 +141,16 @@ lazy val shoppingcartSettings = Seq(
   assemblyJarName in assembly := "shoppingcart.jar",
   resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
     "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaCluster,
-    Library.akkaClusterSharding,
-    Library.akkaClusterTools,
-    Library.akkaPersistence,
-    Library.akkaHttp,
-    Library.akkaSlf4j,
-    Library.commonsIO,
-    Library.logbackClassic,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8,
-    Library.leveldb,
-    Library.leveldbJni,
-    Library.scalaTest % "test",
-    Library.akkaTestKit % "test"
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaCluster ++
+    Groupings.akkaPersistence ++
+    Groupings.akkaHttp ++
+    Groupings.circe ++
+    Seq(
+      Library.scalaTest % "test",
+      Library.akkaTestKit % "test"
+    )
 )
 
 lazy val shoppingcart = project.in(file("shoppingcart")).settings(shoppingcartSettings)
@@ -207,18 +162,14 @@ lazy val orchestratorSettings = Seq(
   assemblyJarName in assembly := "orchestrator.jar",
   resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
     "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
-  libraryDependencies ++= Seq(
-    Library.akkaActor,
-    Library.akkaHttp,
-    Library.akkaSlf4j,
-    Library.akkaHttpCirce,
-    Library.circeCore,
-    Library.circeGeneric,
-    Library.circeParser,
-    Library.circeJava8,
-    Library.jodaTime,
-    Library.cats
-  )
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaHttp ++
+    Groupings.circe ++
+    Seq(
+      Library.jodaTime,
+      Library.cats
+    )
 )
 
 lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSettings).dependsOn(`client-actors`)
