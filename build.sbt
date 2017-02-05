@@ -141,7 +141,11 @@ lazy val receivingSettings = Seq(
   libraryDependencies ++= Seq(
     Library.akkaActor,
     Library.akkaHttp,
-    Library.akkaHttpCirce
+    Library.akkaHttpCirce,
+    Library.circeCore,
+    Library.circeGeneric,
+    Library.circeParser,
+    Library.circeJava8
   )
 )
 
@@ -155,7 +159,11 @@ lazy val shippingSettings = Seq(
   libraryDependencies ++= Seq(
     Library.akkaActor,
     Library.akkaHttp,
-    Library.akkaHttpCirce
+    Library.akkaHttpCirce,
+    Library.circeCore,
+    Library.circeGeneric,
+    Library.circeParser,
+    Library.circeJava8
   )
 )
 
