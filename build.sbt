@@ -86,8 +86,16 @@ lazy val orderTrackingSettings = Seq(
   assemblyJarName in assembly := "ordertracking.jar",
   libraryDependencies ++= Seq(
     Library.akkaActor,
+    Library.akkaCluster,
+    Library.akkaClusterSharding,
+    Library.akkaClusterTools,
+    Library.akkaPersistence,
     Library.akkaHttp,
-    Library.akkaHttpCirce
+    Library.akkaHttpCirce,
+    Library.circeCore,
+    Library.circeGeneric,
+    Library.circeParser,
+    Library.circeJava8
   )
 )
 

@@ -5,7 +5,7 @@ import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.http.scaladsl.server.{Route, Directives}
-import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.StatusCodes
 import com.ecommerce.shoppingcart.backend.ShoppingCart.{ItemRef, CustomerRef, ShoppingCartRef}
 import com.ecommerce.shoppingcart.backend._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
@@ -24,6 +24,7 @@ trait ShoppingCartRoutes {
 
   import CirceSupport._
   import Directives._
+  import StatusCodes._
   import io.circe.generic.auto._
   import RequestViews._
   import ResponseMappers._
