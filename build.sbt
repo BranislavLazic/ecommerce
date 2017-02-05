@@ -109,7 +109,11 @@ lazy val paymentSettings = Seq(
   libraryDependencies ++= Seq(
     Library.akkaActor,
     Library.akkaHttp,
-    Library.akkaHttpCirce
+    Library.akkaHttpCirce,
+    Library.circeCore,
+    Library.circeGeneric,
+    Library.circeParser,
+    Library.circeJava8
   )
 )
 
