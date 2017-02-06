@@ -4,6 +4,7 @@ lazy val ecommerce =
     .aggregate(customers, fulfillment, inventory, `order-tracking`, payment, `product-catalog`,
       receiving, shipping, shoppingcart, orchestrator)
 
+
 lazy val clientactorsSettings = Seq(
   scalaVersion := Version.scala,
   libraryDependencies ++=
@@ -13,6 +14,17 @@ lazy val clientactorsSettings = Seq(
 )
 
 lazy val `client-actors` = project.in(file("client-actors")).settings(clientactorsSettings)
+
+
+lazy val commonSettings = Seq(
+  scalaVersion := Version.scala,
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+    Groupings.akkaHttp ++
+    Groupings.circe
+)
+
+lazy val common = project.in(file("common")).settings(commonSettings)
 
 
 lazy val customersSettings = Seq(
