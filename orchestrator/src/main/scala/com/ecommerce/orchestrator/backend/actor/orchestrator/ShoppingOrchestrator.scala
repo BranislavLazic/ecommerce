@@ -7,8 +7,10 @@ import akka.util.Timeout
 import cats.data.EitherT
 import cats.implicits._
 import com.ecommerce.common.clientactors.http.PaymentHttpClient.Pay
-import com.ecommerce.common.views.RequestViews
-import com.ecommerce.common.views.ResponseViews
+import com.ecommerce.common.views.ShoppingCartRequest._
+import com.ecommerce.common.views.ShoppingCartResponse._
+import com.ecommerce.common.views.InventoryRequest._
+import com.ecommerce.common.views.PaymentResponse._
 import com.ecommerce.common.clientactors.http._
 import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
@@ -80,8 +82,6 @@ trait ShoppingOrchestratorApi { this: Actor =>
   import HttpClient._
   import ShoppingCartProtocol._
   import InventoryProtocol._
-  import RequestViews._
-  import ResponseViews._
 
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout = Timeout(3 seconds)

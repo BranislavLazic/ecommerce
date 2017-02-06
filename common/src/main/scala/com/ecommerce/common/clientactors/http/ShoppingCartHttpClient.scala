@@ -1,8 +1,8 @@
 package com.ecommerce.common.clientactors.http
 
 import java.util.UUID
-import com.ecommerce.common.views.RequestViews
-import com.ecommerce.common.views.ResponseViews
+import com.ecommerce.common.views.ShoppingCartRequest
+import com.ecommerce.common.views.ShoppingCartResponse
 import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
 import scala.concurrent.Future
 import akka.actor.{Actor, ActorLogging, Props}
@@ -23,7 +23,7 @@ object ShoppingCartHttpClient {
 
 class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHttpClientApi {
   import ShoppingCartProtocol._
-  import RequestViews._
+  import ShoppingCartRequest._
   import akka.pattern.pipe
   implicit def executionContext = context.dispatcher
   implicit def system = context.system
@@ -43,8 +43,8 @@ trait ShoppingCartHttpClientApi extends HttpClient {
   import CirceSupport._
   import io.circe.generic.auto._
   import io.circe.syntax._
-  import RequestViews._
-  import ResponseViews._
+  import ShoppingCartRequest._
+  import ShoppingCartResponse._
   import HttpClient._
 
   def getShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] = {

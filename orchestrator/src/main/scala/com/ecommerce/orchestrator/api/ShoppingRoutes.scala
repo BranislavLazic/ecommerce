@@ -8,9 +8,9 @@ import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server._
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
-import com.ecommerce.common.views.RequestViews.AddItemView
+import com.ecommerce.common.views.ShoppingCartRequest.AddItemView
 import com.ecommerce.orchestrator.api.RequestViews.{CheckoutView}
-import com.ecommerce.common.views.ResponseViews.{ShoppingCartView}
+import com.ecommerce.common.views.ShoppingCartResponse.{ShoppingCartView}
 import com.ecommerce.orchestrator.backend.actor.orchestrator.ShoppingOrchestrator
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 

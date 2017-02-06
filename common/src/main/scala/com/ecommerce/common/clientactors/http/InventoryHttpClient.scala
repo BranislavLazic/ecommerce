@@ -9,8 +9,8 @@ import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Sink, Source}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import scala.concurrent.Future
-import com.ecommerce.common.views.RequestViews
-import com.ecommerce.common.views.ResponseViews
+import com.ecommerce.common.views.InventoryRequest
+import com.ecommerce.common.views.InventoryResponse
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
 
 /**
@@ -25,7 +25,7 @@ object InventoryHttpClient {
 
 class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClientApi {
   import InventoryProtocol._
-  import RequestViews._
+  import InventoryRequest._
   import akka.pattern.pipe
   implicit def executionContext = context.dispatcher
   implicit def system = context.system
@@ -38,7 +38,7 @@ class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClie
     case AcceptShipment(iid, sid, d, c) =>
       acceptShipment(iid, AcceptShipmentView(sid, d, c)).pipeTo(sender())
     case AcknowledgeShipment(iid, sid, ed, c) =>
-      acknowledgeShipment(iid, AcknowledgeShhipmentView(sid, ed, c)).pipeTo(sender())
+      acknowledgeShipment(iid, AcknowledgeShipmentView(sid, ed, c)).pipeTo(sender())
     case HoldItem(iid, scid, c) =>
       holdItem(iid, scid, HoldItemView(c)).pipeTo(sender())
     case ReserveItem(iid, cid, c) =>
@@ -55,8 +55,8 @@ trait InventoryHttpClientApi extends HttpClient {
   import io.circe.generic.auto._
   import io.circe.syntax._
   import io.circe.java8.time._
-  import RequestViews._
-  import ResponseViews._
+  import InventoryRequest._
+  import InventoryResponse._
   import HttpClient._
 
   def createItem(civ: CreateItemView): Future[HttpClientResult[InventoryItemView]] = {
@@ -91,7 +91,7 @@ trait InventoryHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def acknowledgeShipment(itemId: UUID, asv: AcknowledgeShhipmentView): Future[HttpClientResult[InventoryItemView]] = {
+  def acknowledgeShipment(itemId: UUID, asv: AcknowledgeShipmentView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, asv.asJson.toString()),
