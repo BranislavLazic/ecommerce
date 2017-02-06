@@ -11,6 +11,7 @@ import de.heikoseeberger.akkahttpcirce.CirceSupport
 import scala.concurrent.Future
 import com.ecommerce.common.views.RequestViews
 import com.ecommerce.common.views.ResponseViews
+import com.ecommerce.common.clientactors.protocols.InventoryProtocol
 
 /**
   * Created by lukewyman on 2/5/17.
@@ -20,19 +21,10 @@ object InventoryHttpClient {
   def props = Props(new InventoryHttpClient)
 
   def name = "inventory-client"
-
-  case class CreateItem(itemId: UUID)
-  case class GetItem(itemId: UUID)
-  case class AcceptShipment(itemId: UUID, shipmentId: UUID, date: ZonedDateTime, count: Int)
-  case class AcknowledgeShipment(itemId: UUID, shipmentId: UUID, expectedDate: ZonedDateTime, count: Int)
-  case class HoldItem(itemId: UUID, shoppingCartId: UUID, count: Int)
-  case class ReserveItem(itemId: UUID, customerId: UUID, count: Int)
-  case class ReleaseItem(itemId: UUID, shoppingCartId: UUID)
-  case class ClaimItem(itemId: UUID, shoppingCartId: UUID, paymentId: UUID)
 }
 
 class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClientApi {
-  import InventoryHttpClient._
+  import InventoryProtocol._
   import RequestViews._
   import akka.pattern.pipe
   implicit def executionContext = context.dispatcher

@@ -10,6 +10,8 @@ import com.ecommerce.common.clientactors.http.PaymentHttpClient.Pay
 import com.ecommerce.common.views.RequestViews
 import com.ecommerce.common.views.ResponseViews
 import com.ecommerce.common.clientactors.http._
+import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
+import com.ecommerce.common.clientactors.protocols.InventoryProtocol
 import com.ecommerce.common.clientactors.kafka._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +37,6 @@ object ShoppingOrchestrator {
 class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
   import akka.pattern.pipe
   import ShoppingOrchestrator._
-  import RequestViews._
 
   implicit def executionContext = context.dispatcher
 
@@ -77,9 +78,8 @@ class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
 trait ShoppingOrchestratorApi { this: Actor =>
   import akka.pattern.ask
   import HttpClient._
-  import InventoryKafkaClient._
-  import InventoryHttpClient._
-  import ShoppingCartHttpClient._
+  import ShoppingCartProtocol._
+  import InventoryProtocol._
   import RequestViews._
   import ResponseViews._
 

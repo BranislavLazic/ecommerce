@@ -3,6 +3,7 @@ package com.ecommerce.common.clientactors.http
 import java.util.UUID
 import com.ecommerce.common.views.RequestViews
 import com.ecommerce.common.views.ResponseViews
+import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
 import scala.concurrent.Future
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.http.scaladsl.model.Uri.Path
@@ -18,16 +19,10 @@ object ShoppingCartHttpClient {
   def props = Props(new ShoppingCartHttpClient)
 
   def name = "shoppingcart-manager"
-
-  case class GetShoppingCart(id: UUID)
-  case class CreateShoppingCart(shoppingCartId: UUID, customerId: UUID)
-  case class AddItem(shoppingCartId: UUID, itemId: UUID, count: Int)
-  case class RemoveItem(shoppingCartId: UUID, itemID: UUID)
-  case class ClearCart(shoppingCartId: UUID)
 }
 
 class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHttpClientApi {
-  import ShoppingCartHttpClient._
+  import ShoppingCartProtocol._
   import RequestViews._
   import akka.pattern.pipe
   implicit def executionContext = context.dispatcher
