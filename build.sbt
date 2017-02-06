@@ -171,7 +171,7 @@ lazy val shoppingcartSettings = Seq(
     )
 )
 
-lazy val shoppingcart = project.in(file("shoppingcart")).settings(shoppingcartSettings)
+lazy val shoppingcart = project.in(file("shoppingcart")).settings(shoppingcartSettings).dependsOn(common)
 
 
 lazy val ui = project.in(file("ui")).enablePlugins(PlayScala)

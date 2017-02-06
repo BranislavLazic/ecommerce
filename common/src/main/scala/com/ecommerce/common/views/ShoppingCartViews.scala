@@ -11,6 +11,6 @@ object ShoppingCartRequest {
 }
 
 object ShoppingCartResponse {
-  case class ShoppingCartView(shoppingCartId: UUID, items: List[ShoppingCartItemView])
+  case class ShoppingCartView(shoppingCartId: UUID, customerId: Option[UUID],  items: List[ShoppingCartItemView])
   case class ShoppingCartItemView(itemId: UUID, count: Int)
 }
