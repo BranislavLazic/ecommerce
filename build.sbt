@@ -5,17 +5,6 @@ lazy val ecommerce =
       receiving, shipping, shoppingcart, orchestrator)
 
 
-lazy val clientactorsSettings = Seq(
-  scalaVersion := Version.scala,
-  libraryDependencies ++=
-    Groupings.akkaBasics ++
-    Groupings.akkaHttp ++
-    Groupings.circe
-)
-
-lazy val `client-actors` = project.in(file("client-actors")).settings(clientactorsSettings)
-
-
 lazy val commonSettings = Seq(
   scalaVersion := Version.scala,
   libraryDependencies ++=
@@ -26,6 +15,23 @@ lazy val commonSettings = Seq(
 
 lazy val common = project.in(file("common")).settings(commonSettings)
 
+lazy val orchestratorSettings = Seq(
+  scalaVersion := Version.scala,
+  mainClass in Global := Some("com.ecommerce.orchestrator.Boot"),
+  assemblyJarName in assembly := "orchestrator.jar",
+  resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
+    "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
+  libraryDependencies ++=
+    Groupings.akkaBasics ++
+      Groupings.akkaHttp ++
+      Groupings.circe ++
+      Seq(
+        Library.jodaTime,
+        Library.cats
+      )
+)
+
+lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSettings).dependsOn(common)
 
 lazy val customersSettings = Seq(
   scalaVersion := Version.scala,
@@ -166,25 +172,6 @@ lazy val shoppingcartSettings = Seq(
 )
 
 lazy val shoppingcart = project.in(file("shoppingcart")).settings(shoppingcartSettings)
-
-
-lazy val orchestratorSettings = Seq(
-  scalaVersion := Version.scala,
-  mainClass in Global := Some("com.ecommerce.orchestrator.Boot"),
-  assemblyJarName in assembly := "orchestrator.jar",
-  resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
-    "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
-  libraryDependencies ++=
-    Groupings.akkaBasics ++
-    Groupings.akkaHttp ++
-    Groupings.circe ++
-    Seq(
-      Library.jodaTime,
-      Library.cats
-    )
-)
-
-lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSettings).dependsOn(`client-actors`)
 
 
 lazy val ui = project.in(file("ui")).enablePlugins(PlayScala)

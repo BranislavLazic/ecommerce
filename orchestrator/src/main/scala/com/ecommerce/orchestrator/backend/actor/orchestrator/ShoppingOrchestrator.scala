@@ -6,10 +6,11 @@ import akka.actor.{ActorRef, Actor, Props}
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.implicits._
-import com.ecommerce.clientactors.http.PaymentHttpClient.Pay
-import com.ecommerce.clientactors.http.RequestViews.{ClaimItemView, HoldItemView, AddItemView}
-import com.ecommerce.clientactors.http._
-import com.ecommerce.clientactors.kafka._
+import com.ecommerce.common.clientactors.http.PaymentHttpClient.Pay
+import com.ecommerce.common.views.RequestViews
+import com.ecommerce.common.views.ResponseViews
+import com.ecommerce.common.clientactors.http._
+import com.ecommerce.common.clientactors.kafka._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -34,6 +35,7 @@ object ShoppingOrchestrator {
 class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
   import akka.pattern.pipe
   import ShoppingOrchestrator._
+  import RequestViews._
 
   implicit def executionContext = context.dispatcher
 
@@ -76,7 +78,9 @@ trait ShoppingOrchestratorApi { this: Actor =>
   import akka.pattern.ask
   import HttpClient._
   import InventoryKafkaClient._
+  import InventoryHttpClient._
   import ShoppingCartHttpClient._
+  import RequestViews._
   import ResponseViews._
 
   implicit def executionContext: ExecutionContext
@@ -109,7 +113,7 @@ trait ShoppingOrchestratorApi { this: Actor =>
     inventoryClient.ask(HoldItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[HoldItemView]]
 
   def claimInventory(shoppingCartId: UUID, itemId: UUID, paymentId: UUID): Future[HttpClientResult[ClaimItemView]] =
-    inventoryClient.ask(ClaimItem(shoppingCartId, itemId, paymentId)).mapTo[HttpClientResult[ClaimItemView]]
+    inventoryQueue.ask(ClaimItem(shoppingCartId, itemId, paymentId)).mapTo[HttpClientResult[ClaimItemView]]
 
   def pay(creditCard: String): Future[HttpClientResult[PaymentTokenView]] =
     paymentClient.ask(Pay(creditCard)).mapTo[HttpClientResult[PaymentTokenView]]

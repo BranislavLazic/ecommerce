@@ -7,12 +7,11 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server._
 import akka.util.Timeout
-import com.ecommerce.clientactors.http.HttpClient.HttpClientResult
-import com.ecommerce.clientactors.http.RequestViews.AddItemView
-import com.ecommerce.clientactors.http.ResponseViews.ShoppingCartView
-import com.ecommerce.orchestrator.api.RequestViews.CheckoutView
+import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
+import com.ecommerce.common.views.RequestViews.AddItemView
+import com.ecommerce.orchestrator.api.RequestViews.{CheckoutView}
+import com.ecommerce.common.views.ResponseViews.{ShoppingCartView}
 import com.ecommerce.orchestrator.backend.actor.orchestrator.ShoppingOrchestrator
-import com.ecommerce.orchestrator.backend.actor.orchestrator.ShoppingOrchestrator._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.ExecutionContext
@@ -28,6 +27,7 @@ trait ShoppingRoutes {
   import StatusCodes._
   import CirceSupport._
   import io.circe.generic.auto._
+  import ShoppingOrchestrator._
 
   def system: ActorSystem
 
