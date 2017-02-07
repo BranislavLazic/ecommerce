@@ -77,7 +77,7 @@ lazy val inventorySettings = Seq(
     )
 )
 
-lazy val inventory = project.in(file("inventory")).settings(inventorySettings)
+lazy val inventory = project.in(file("inventory")).settings(inventorySettings).dependsOn(common)
 
 
 lazy val orderTrackingSettings = Seq(

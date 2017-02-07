@@ -42,7 +42,7 @@ class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClie
     case HoldItem(iid, scid, c) =>
       holdItem(iid, scid, HoldItemView(c)).pipeTo(sender())
     case ReserveItem(iid, cid, c) =>
-      reserveItem(iid, ReserveItemView(cid, c)).pipeTo(sender())
+      reserveItem(iid, ReserveItemView(cid, null, c)).pipeTo(sender())
     case ReleaseItem(iid, scid) =>
       abandonCart(iid, scid).pipeTo(sender())
     case ClaimItem(iid, scid, pid) =>
