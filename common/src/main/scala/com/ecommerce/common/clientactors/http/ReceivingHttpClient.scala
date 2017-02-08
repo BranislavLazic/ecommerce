@@ -33,8 +33,8 @@ class ReceivingHttpClient extends Actor with ReceivingHttpClientApi {
   implicit def system = context.system
 
   def receive = {
-    case CreateShipment(sid, pid, c) =>
-      createShipment(sid, pid, c).pipeTo(sender())
+    case CreateShipment(pid, c) =>
+      createShipment(pid, c).pipeTo(sender())
     case GetShipment(sid) =>
       getShipment(sid).pipeTo(sender())
     case AcknowledgeShipment(sid, ed) =>
@@ -64,10 +64,10 @@ trait ReceivingHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def createShipment(shipmentId: UUID, productId: UUID, count: Int): Future[HttpClientResult[ShipmentView]] = {
+  def createShipment(productId: UUID, count: Int): Future[HttpClientResult[ShipmentView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
-      entity = HttpEntity(ContentTypes.`application/json`, CreateShipmentView(shipmentId, productId, count).asJson.toString()),
+      entity = HttpEntity(ContentTypes.`application/json`, CreateShipmentView(productId, count).asJson.toString()),
       uri = Uri(path = Path("/shipments"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[ShipmentView](r)

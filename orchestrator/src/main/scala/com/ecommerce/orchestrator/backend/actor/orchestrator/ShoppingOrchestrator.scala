@@ -6,17 +6,9 @@ import akka.actor.{ActorRef, Actor, Props}
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.implicits._
-import com.ecommerce.common.clientactors.http.PaymentHttpClient.Pay
-import com.ecommerce.common.views.ShoppingCartRequest._
-import com.ecommerce.common.views.ShoppingCartResponse._
-import com.ecommerce.common.views.InventoryRequest._
-import com.ecommerce.common.views.PaymentResponse._
 import com.ecommerce.common.clientactors.http._
-import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
-import com.ecommerce.common.clientactors.protocols.InventoryProtocol
 import com.ecommerce.common.clientactors.kafka._
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 /**
@@ -36,11 +28,15 @@ object ShoppingOrchestrator {
   case class ClearCart(shoppingCartId: UUID)
 }
 
-class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
+class ShoppingOrchestrator extends Actor
+  with ShoppingCartApi
+  with InventoryApi
+  with PaymentApi {
   import akka.pattern.pipe
   import ShoppingOrchestrator._
 
   implicit def executionContext = context.dispatcher
+  implicit def timeout: Timeout = Timeout(3 seconds)
 
   def inventoryClient = context.actorOf(InventoryHttpClient.props, InventoryHttpClient.name)
   def inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
@@ -75,46 +71,4 @@ class ShoppingOrchestrator extends Actor with ShoppingOrchestratorApi {
       } yield sc
       result.value.pipeTo(sender())
   }
-}
-
-trait ShoppingOrchestratorApi { this: Actor =>
-  import akka.pattern.ask
-  import HttpClient._
-  import ShoppingCartProtocol._
-  import InventoryProtocol._
-
-  implicit def executionContext: ExecutionContext
-  implicit def timeout: Timeout = Timeout(3 seconds)
-
-  def inventoryClient: ActorRef
-  def inventoryQueue: ActorRef
-  def paymentClient: ActorRef
-  def shoppingCartClient: ActorRef
-
-  def createShoppingCart(shoppingCartId: UUID, customerId: UUID) =
-    shoppingCartClient.ask(CreateShoppingCart(shoppingCartId, customerId)).mapTo[HttpClientResult[ShoppingCartView]]
-
-  def getShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] =
-    shoppingCartClient.ask(GetShoppingCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
-
-  def addItem(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[AddItemView]] =
-    shoppingCartClient.ask(AddItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[AddItemView]]
-
-  def removeItem(shoppingCartId: UUID, itemId: UUID): Future[HttpClientResult[ShoppingCartView]] =
-    shoppingCartClient.ask(RemoveItem(shoppingCartId, itemId)).mapTo[HttpClientResult[ShoppingCartView]]
-
-  def clearShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] =
-    shoppingCartClient.ask(ClearCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
-
-  def releaseInventory(shoppingCartId: UUID, itemId: UUID) =
-    inventoryQueue ! ReleaseItem(itemId, shoppingCartId)
-
-  def holdInventory(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[HoldItemView]] =
-    inventoryClient.ask(HoldItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[HoldItemView]]
-
-  def claimInventory(shoppingCartId: UUID, itemId: UUID, paymentId: UUID): Future[HttpClientResult[ClaimItemView]] =
-    inventoryQueue.ask(ClaimItem(shoppingCartId, itemId, paymentId)).mapTo[HttpClientResult[ClaimItemView]]
-
-  def pay(creditCard: String): Future[HttpClientResult[PaymentTokenView]] =
-    paymentClient.ask(Pay(creditCard)).mapTo[HttpClientResult[PaymentTokenView]]
 }
