@@ -6,10 +6,8 @@ import java.util.UUID
 import akka.actor.ActorRef
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient
-import com.ecommerce.common.clientactors.http.HttpClient._
 import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
 import com.ecommerce.common.views.ReceivingResponse
-import com.ecommerce.common.views.ReceivingResponse.ShipmentView
 
 import scala.concurrent.{Future, ExecutionContext}
 
