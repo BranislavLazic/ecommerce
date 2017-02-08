@@ -8,6 +8,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.util.Timeout
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
+
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
@@ -23,6 +24,7 @@ trait ReceivingRoutes {
   import StatusCodes._
   import CirceSupport._
   import io.circe.generic.auto._
+  import akka.pattern.ask
 
   def shipments: ActorRef
 

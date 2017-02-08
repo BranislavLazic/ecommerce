@@ -1,0 +1,98 @@
+package com.ecommerce.common.clientactors.http
+
+import java.time.ZonedDateTime
+import java.util.UUID
+
+import akka.actor.{Props, Actor}
+import akka.http.scaladsl.model.Uri.Path
+import akka.http.scaladsl.model._
+import akka.stream.scaladsl.{Sink, Source}
+import de.heikoseeberger.akkahttpcirce.CirceSupport
+import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
+import com.ecommerce.common.views.ReceivingRequest
+import com.ecommerce.common.views.ReceivingResponse
+
+import scala.concurrent.Future
+
+/**
+  * Created by lukewyman on 2/6/17.
+  */
+object ReceivingHttpClient {
+
+  val props = Props(new ReceivingHttpClient)
+
+  val name = "receiving-http-client"
+}
+
+class ReceivingHttpClient extends Actor with ReceivingHttpClientApi {
+  import ReceivingProtocol._
+  import ReceivingRequest._
+  import akka.pattern.pipe
+
+  implicit def executionContext = context.dispatcher
+  implicit def system = context.system
+
+  def receive = {
+    case CreateShipment(sid, pid, c) =>
+      createShipment(sid, pid, c).pipeTo(sender())
+    case GetShipment(sid) =>
+      getShipment(sid).pipeTo(sender())
+    case AcknowledgeShipment(sid, ed) =>
+      acknowledgeShipment(sid, ed).pipeTo(sender())
+    case AcceptShipment(sid) =>
+      acceptShipment(sid).pipeTo(sender())
+  }
+}
+
+trait ReceivingHttpClientApi extends HttpClient {
+
+  import CirceSupport._
+  import io.circe.generic.auto._
+  import io.circe.syntax._
+  import io.circe.java8.time._
+  import ReceivingRequest._
+  import ReceivingResponse._
+  import HttpClient._
+
+  def getShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] = {
+
+    val source = Source.single(HttpRequest(method = HttpMethods.GET,
+      uri = Uri(path = Path(s"/shipments/${shipmentId}"))))
+    val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
+      deserialize[ShipmentView](r)
+    }
+    source.via(flow).runWith(Sink.head)
+  }
+
+  def createShipment(shipmentId: UUID, productId: UUID, count: Int): Future[HttpClientResult[ShipmentView]] = {
+
+    val source = Source.single(HttpRequest(method = HttpMethods.POST,
+      entity = HttpEntity(ContentTypes.`application/json`, CreateShipmentView(shipmentId, productId, count).asJson.toString()),
+      uri = Uri(path = Path("/shipments"))))
+    val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
+      deserialize[ShipmentView](r)
+    }
+    source.via(flow).runWith(Sink.head)
+  }
+
+  def acknowledgeShipment(shipmentId: UUID, expectedDelivery: ZonedDateTime): Future[HttpClientResult[ShipmentView]] = {
+
+    val source = Source.single(HttpRequest(method = HttpMethods.POST,
+      entity = HttpEntity(ContentTypes.`application/json`, AcknowledgeShipmentView(expectedDelivery).asJson.toString()),
+      uri = Uri(path = Path(s"/shipments/${shipmentId}"))))
+    val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
+      deserialize[ShipmentView](r)
+    }
+    source.via(flow).runWith(Sink.head)
+  }
+
+  def acceptShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] = {
+
+    val source = Source.single(HttpRequest(method = HttpMethods.POST,
+      uri = Uri(path = Path(s"/shipments/${shipmentId}/deliveries"))))
+    val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
+      deserialize[ShipmentView](r)
+    }
+    source.via(flow).runWith(Sink.head)
+  }
+}
