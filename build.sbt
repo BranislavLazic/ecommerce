@@ -136,7 +136,7 @@ lazy val receivingSettings = Seq(
 )
 
 
-lazy val receiving = project.in(file("receiving")).settings(receivingSettings)
+lazy val receiving = project.in(file("receiving")).settings(receivingSettings).dependsOn(common)
 
 
 lazy val shippingSettings = Seq(
