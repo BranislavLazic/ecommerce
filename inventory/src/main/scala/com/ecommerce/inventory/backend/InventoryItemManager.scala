@@ -24,8 +24,8 @@ object InventoryItemManager {
   case class MakeReservation(item: ItemRef, reservation: ReservationRef, count: Int) extends Command
   case class Checkout(item: ItemRef, shoppingCart: ShoppingCartRef, payment: PaymentRef) extends Command
   case class AbandonCart(item: ItemRef, shoppingCart: ShoppingCartRef) extends Command
-  case class AcceptShipment(item: ItemRef, shipment: ShipmentRef) extends Command
-  case class AcknowledgeShipment(item: ItemRef, shipment: ShipmentRef) extends Command
+  case class ReceiveSupply(item: ItemRef, shipment: ShipmentRef) extends Command
+  case class NotifySupply(item: ItemRef, shipment: ShipmentRef) extends Command
 
   sealed trait Event extends InventoryMessage with Serializable
   case class ProductChanged(item: ItemRef) extends Event

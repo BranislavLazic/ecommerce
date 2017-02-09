@@ -41,8 +41,8 @@ trait InventoryRoutes {
     checkout ~
     abandonCart ~
     holdItem ~
-    acceptShipment ~
-    acknowledgeShipment ~
+    receiveSupply ~
+    notifySupply ~
     getItem ~
     createItem
 
@@ -72,13 +72,13 @@ trait InventoryRoutes {
     }
   }
 
-  def acceptShipment: Route = {
+  def receiveSupply: Route = {
     post {
       pathPrefix("items" / ItemId / "shipments") { itemId =>
         pathEndOrSingleSlash {
-          entity(as[AcceptShipmentView]) { asv =>
-            val shipment = AcceptShipment(ItemRef(itemId), ShipmentRef(asv.shipmentId, asv.date, asv.count))
-            inventoryItems ! shipment
+          entity(as[ReceiveSupplyView]) { asv =>
+            val supply = ReceiveSupply(ItemRef(itemId), ShipmentRef(asv.shipmentId, asv.date, asv.count))
+            inventoryItems ! supply
             complete(OK)
           }
         }
@@ -86,14 +86,14 @@ trait InventoryRoutes {
     }
   }
 
-  def acknowledgeShipment: Route = {
+  def notifySupply: Route = {
     post {
       pathPrefix("items" / ItemId / "acknowledgements") { itemId =>
         pathEndOrSingleSlash {
-          entity(as[AcknowledgeShipmentView]) { asv =>
-            val acknowledgement =
-              AcknowledgeShipment(ItemRef(itemId), ShipmentRef(asv.shipmentId, asv.expectedDate, asv.count))
-            inventoryItems ! acknowledgement
+          entity(as[NotifySupplyView]) { asv =>
+            val notification =
+              NotifySupply(ItemRef(itemId), ShipmentRef(asv.shipmentId, asv.expectedDate, asv.count))
+            inventoryItems ! notification
             complete(OK)
           }
         }

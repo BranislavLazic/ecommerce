@@ -35,10 +35,10 @@ class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClie
       createItem(CreateItemView(iid)).pipeTo(sender())
     case GetItem(iid) =>
       getItem(iid).pipeTo(sender())
-    case AcceptShipment(iid, sid, d, c) =>
-      acceptShipment(iid, AcceptShipmentView(sid, d, c)).pipeTo(sender())
-    case AcknowledgeShipment(iid, sid, ed, c) =>
-      acknowledgeShipment(iid, AcknowledgeShipmentView(sid, ed, c)).pipeTo(sender())
+    case ReceiveSupply(iid, sid, d, c) =>
+      acceptShipment(iid, ReceiveSupplyView(sid, d, c)).pipeTo(sender())
+    case NotifySupply(iid, sid, ed, c) =>
+      acknowledgeShipment(iid, NotifySupplyView(sid, ed, c)).pipeTo(sender())
     case HoldItem(iid, scid, c) =>
       holdItem(iid, scid, HoldItemView(c)).pipeTo(sender())
     case ReserveItem(iid, cid, c) =>
@@ -80,7 +80,7 @@ trait InventoryHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def acceptShipment(itemId: UUID, asv: AcceptShipmentView): Future[HttpClientResult[InventoryItemView]] = {
+  def acceptShipment(itemId: UUID, asv: ReceiveSupplyView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, asv.asJson.toString()),
@@ -91,7 +91,7 @@ trait InventoryHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def acknowledgeShipment(itemId: UUID, asv: AcknowledgeShipmentView): Future[HttpClientResult[InventoryItemView]] = {
+  def acknowledgeShipment(itemId: UUID, asv: NotifySupplyView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, asv.asJson.toString()),

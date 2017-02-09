@@ -9,6 +9,7 @@ import cats.Monad
 import cats.data.EitherT
 import cats.implicits._
 import com.ecommerce.common.clientactors.http._
+import com.ecommerce.common.clientactors.kafka.InventoryKafkaClient
 import scala.concurrent.duration._
 
 /**
@@ -35,6 +36,7 @@ class ReceivingOrchestrator extends Actor
 
   val receivingClient = context.actorOf(ReceivingHttpClient.props, ReceivingHttpClient.name)
   val inventoryClient = context.actorOf(InventoryHttpClient.props, InventoryHttpClient.name)
+  val inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
 
   def receive = {
     case PlaceOrder(pid, c) =>
