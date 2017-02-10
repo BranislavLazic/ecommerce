@@ -19,8 +19,7 @@ lazy val orchestratorSettings = Seq(
   scalaVersion := Version.scala,
   mainClass in Global := Some("com.ecommerce.orchestrator.Boot"),
   assemblyJarName in assembly := "orchestrator.jar",
-  resolvers ++= Seq("Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
-    "Sonatype snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots/"),
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3"),
   libraryDependencies ++=
     Groupings.akkaBasics ++
       Groupings.akkaHttp ++

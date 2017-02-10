@@ -15,7 +15,7 @@ case class OrchestratorService(val system: ActorSystem, val requestTimeout: Time
   val executionContext = system.dispatcher
 }
 
-trait OrchestratorRoutes extends ShoppingRoutes with ShippingRoutes {
+trait OrchestratorRoutes extends ShoppingRoutes {
   import Directives._
 
   def system: ActorSystem
@@ -24,6 +24,6 @@ trait OrchestratorRoutes extends ShoppingRoutes with ShippingRoutes {
   implicit def executionContext: ExecutionContext
 
   def routes: Route =
-    shoppingRoutes ~
-    shippingRoutes
+    shoppingRoutes
+
 }

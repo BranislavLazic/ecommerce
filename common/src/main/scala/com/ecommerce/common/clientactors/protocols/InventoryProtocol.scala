@@ -11,7 +11,7 @@ object InventoryProtocol {
   case class CreateItem(itemId: UUID)
   case class GetItem(itemId: UUID)
   case class ReceiveSupply(itemId: UUID, shipmentId: UUID, date: ZonedDateTime, count: Int)
-  case class NotifySupply(itemId: UUID, shipmentId: UUID, expectedDate: ZonedDateTime, count: Int)
+  case class NotifySupply(itemId: UUID, shipmentId: UUID, expectedDelivery: ZonedDateTime, count: Int)
   case class HoldItem(itemId: UUID, shoppingCartId: UUID, count: Int)
   case class ReserveItem(itemId: UUID, customerId: UUID, count: Int)
   case class ReleaseItem(itemId: UUID, shoppingCartId: UUID)
