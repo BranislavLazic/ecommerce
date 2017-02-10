@@ -48,15 +48,20 @@ class ReceivingOrchestrator extends Actor
       val gi = EitherT(getInventoryItem(pid))
       Applicative[EitherT[Future, HttpClientError, ?]].map2(cs, gi)(mapToReceivingSummaryView)
         .value.pipeTo(sender())
+      kill()
     case AcknowledgeShipment(iid, sid, ed, c) =>
       val as = EitherT(acknowledgeShipment(sid, ed))
       val ns = EitherT(notifySupply(iid, sid, ed, c))
       Applicative[EitherT[Future, HttpClientError, ?]].map2(as, ns)(mapToReceivingSummaryView)
         .value.pipeTo(sender())
+      kill()
     case AcceptShipment(iid, sid, d, c) =>
       val as = EitherT(acceptShipment(sid))
       val rs = EitherT(receiveSupply(iid, sid, d, c))
       Applicative[EitherT[Future, HttpClientError, ?]].map2(as, rs)(mapToReceivingSummaryView)
         .value.pipeTo(sender())
+      kill()
   }
+
+  def kill() = ??? // TODO: implementation to kill http cleint actors and self
 }

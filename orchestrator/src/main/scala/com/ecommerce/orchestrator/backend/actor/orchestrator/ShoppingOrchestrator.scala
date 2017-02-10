@@ -46,18 +46,22 @@ class ShoppingOrchestrator extends Actor
   def receive = {
     case StartShopping(scid, cid) =>
       createShoppingCart(scid, cid).pipeTo(sender())
+      kill()
     case PlaceInCart(scid, iid, c, bo) =>
       val pic = EitherT(holdInventory(scid, iid, c))
         .flatMapF(iv => addItem(scid, iid, iv.count))
       pic.value.pipeTo(sender())
+      kill()
     case RemoveFromCart(scid, iid) =>
       val rfc = removeItem(scid, iid)
       releaseInventory(scid, iid)
       rfc.pipeTo(sender())
+      kill()
     case AbandonCart(scid) =>
       val scf = EitherT(getShoppingCart(scid))
       scf.map(sc => sc.items.foreach(i => releaseInventory(scid, i.itemId)))
       scf.flatMapF(sc => clearShoppingCart(sc.shoppingCartId)).value.pipeTo(sender())
+      kill()
     case Checkout(scid, cc) =>
       /* what should happen here is that an Order should be created, and the Order with it's OrderStatus
         should be returned to the caller. Returning the ShoppingCartView is a stop-gap until the Order
@@ -70,5 +74,8 @@ class ShoppingOrchestrator extends Actor
         cs = sc.items.map(i => claimInventory(sc.shoppingCartId, i.itemId, p.paymentId))
       } yield sc
       result.value.pipeTo(sender())
+      kill()
   }
+
+  def kill() = ??? // TODO: implementation to kill http cleint actors and self
 }
