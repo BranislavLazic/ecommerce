@@ -9,7 +9,13 @@ import java.util.UUID
 
 object RequestViews {
 
+  // Receiving
+  case class RequestShipmentView(productId: UUID, ordered: ZonedDateTime, count: Int)
+  case class AcknowledgeShipmentView(shipmentId: UUID, productId: UUID, expectedDelivery: ZonedDateTime, count: Int)
+  case class AcceptShipmentView(shipmentId: UUID, productId: UUID, delivered: ZonedDateTime, count: Int)
 
+  // Shopping
+  case class CheckoutView(shoppingCartId: UUID, creditCard: String)
 }
 
 object ResponseViews {

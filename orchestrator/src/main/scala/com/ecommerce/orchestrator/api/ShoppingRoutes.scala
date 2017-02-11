@@ -9,7 +9,7 @@ import akka.http.scaladsl.server._
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
 import com.ecommerce.common.views.ShoppingCartRequest.AddItemView
-import com.ecommerce.orchestrator.api.RequestViews.{CheckoutView}
+import com.ecommerce.orchestrator.backend.actor.orchestrator.RequestViews
 import com.ecommerce.common.views.ShoppingCartResponse.{ShoppingCartView}
 import com.ecommerce.orchestrator.backend.actor.orchestrator.ShoppingOrchestrator
 import de.heikoseeberger.akkahttpcirce.CirceSupport
@@ -21,13 +21,13 @@ import scala.util.Try
   * Created by lukewyman on 1/31/17.
   */
 trait ShoppingRoutes {
-
   import akka.pattern.ask
   import Directives._
   import StatusCodes._
   import CirceSupport._
   import io.circe.generic.auto._
   import ShoppingOrchestrator._
+  import RequestViews._
 
   def system: ActorSystem
 
@@ -40,6 +40,11 @@ trait ShoppingRoutes {
     removeFromCart ~
     abandonCart ~
     checkout
+
+  def IdSegment: PathMatcher1[UUID]
+  val CustomerId = IdSegment
+  val ShoppingCartId = IdSegment
+  val ProductId = IdSegment
 
   def startShopping: Route = {
     post {
@@ -115,9 +120,4 @@ trait ShoppingRoutes {
       }
     }
   }
-
-  val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
-  val CustomerId = IdSegment
-  val ShoppingCartId = IdSegment
-  val ProductId = IdSegment
 }

@@ -23,7 +23,8 @@ object ReceivingOrchestrator {
 
   val name = "receiving-orchestrator"
 
-  case class PlaceOrder(productId: UUID, count: Int)
+  case class GetShipment(shipmentId: UUID)
+  case class RequestShipment(productId: UUID, ordered: ZonedDateTime, count: Int)
   case class AcknowledgeShipment(itemId: UUID, shipmentId: UUID, expectedDelivery: ZonedDateTime, count: Int)
   case class AcceptShipment(itemId: UUID, shipmentId: UUID, delivered: ZonedDateTime, count: Int)
 }
@@ -43,7 +44,7 @@ class ReceivingOrchestrator extends Actor
   val inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
 
   def receive = {
-    case PlaceOrder(pid, c) =>
+    case RequestShipment(pid, o, c) =>
       val cs = EitherT(createShipment(pid, c))
       val gi = EitherT(getInventoryItem(pid))
       Applicative[EitherT[Future, HttpClientError, ?]].map2(cs, gi)(mapToReceivingSummaryView)
