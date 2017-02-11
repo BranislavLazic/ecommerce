@@ -43,14 +43,15 @@ trait ReceivingRoutes {
   def IdSegment: PathMatcher1[UUID]
   val ShipmentId = IdSegment
 
+
   def getShipment: Route = {
     get {
-      pathPrefix("receiving" / "shipments" / ShipmentId ) { shipmentId =>
+      pathPrefix( "receiving" / "shipments" / ShipmentId ) { shipmentId =>
         pathEndOrSingleSlash {
           val gs = GetShipment(shipmentId)
           val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
-          onSuccess(receivingOrchestrator.ask(gs).mapTo[HttpClientResult[ReceivingSummaryView]]) { result =>
-            result.fold(complete(BadRequest, _), complete(OK, _))
+          onSuccess(receivingOrchestrator.ask(gs).mapTo[HttpClientResult[ReceivingSummaryView]]) {
+            _.fold(complete(BadRequest, _), complete(OK, _))
           }
         }
       }
@@ -59,13 +60,13 @@ trait ReceivingRoutes {
 
   def requestShipment: Route = {
     post {
-      pathPrefix("receiving" / "shipments" ) {
+      pathPrefix( "receiving" / "shipments" ) {
         pathEndOrSingleSlash {
           entity(as[RequestShipmentView]) { rsv =>
             val rs = RequestShipment(rsv.productId, rsv.ordered, rsv.count)
             val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
-            onSuccess(receivingOrchestrator.ask(rs).mapTo[HttpClientResult[ReceivingSummaryView]]) { result =>
-              result.fold(complete(BadRequest, _), complete(OK, _))
+            onSuccess(receivingOrchestrator.ask(rs).mapTo[HttpClientResult[ReceivingSummaryView]]) {
+              _.fold(complete(BadRequest, _), complete(OK, _))
             }
           }
         }
@@ -75,13 +76,13 @@ trait ReceivingRoutes {
 
   def acknowledgeShipment: Route = {
     post {
-      pathPrefix("receiving" / "shipments" / ShipmentId / "acknowledgments" ) { shipmentId =>
+      pathPrefix( "receiving" / "shipments" / ShipmentId / "acknowledgments" ) { shipmentId =>
         pathEndOrSingleSlash {
           entity(as[AcknowledgeShipmentView]) { asv =>
             val as = AcknowledgeShipment(asv.productId, shipmentId, asv.expectedDelivery, asv.count)
             val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
-            onSuccess(receivingOrchestrator.ask(as).mapTo[HttpClientResult[ReceivingSummaryView]]) { result =>
-              result.fold(complete(BadRequest, _), complete(OK, _))
+            onSuccess(receivingOrchestrator.ask(as).mapTo[HttpClientResult[ReceivingSummaryView]]) {
+              _.fold(complete(BadRequest, _), complete(OK, _))
             }
           }
         }
@@ -91,13 +92,13 @@ trait ReceivingRoutes {
 
   def acceptShipment: Route = {
     post {
-      pathPrefix("receiving" / "shipments" / ShipmentId / "deliveries" ) { shipmentId =>
+      pathPrefix( "receiving" / "shipments" / ShipmentId / "deliveries" ) { shipmentId =>
         pathEndOrSingleSlash {
           entity(as[AcceptShipmentView]) { asv =>
             val as = AcceptShipment(asv.productId, shipmentId, asv.delivered, asv.count)
             val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
-            onSuccess(receivingOrchestrator.ask(as).mapTo[HttpClientResult[ReceivingSummaryView]]) { result =>
-              result.fold(complete(BadRequest, _), complete(OK, _))
+            onSuccess(receivingOrchestrator.ask(as).mapTo[HttpClientResult[ReceivingSummaryView]]) {
+              _.fold(complete(BadRequest, _), complete(OK, _))
             }
           }
         }

@@ -44,6 +44,13 @@ class ReceivingOrchestrator extends Actor
   val inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
 
   def receive = {
+    case GetShipment(sid) =>
+      val result = for {
+        gs <- EitherT(getShipment(sid))
+        gi <- EitherT(getInventoryItem(gs.productId))
+      } yield mapToReceivingSummaryView(gs, gi)
+      result.value.pipeTo(sender())
+      kill()
     case RequestShipment(pid, o, c) =>
       val cs = EitherT(createShipment(pid, c))
       val gi = EitherT(getInventoryItem(pid))

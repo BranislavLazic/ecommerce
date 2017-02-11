@@ -15,7 +15,13 @@ object ReceivingRequest {
 
 object ReceivingResponse {
 
-  case class ShipmentView(shipmentId: UUID, productId: UUID, expectedDelivery: ZonedDateTime, count: Int)
+  case class ShipmentView(
+                           shipmentId: UUID,
+                           productId: UUID,
+                           ordered: ZonedDateTime,
+                           expectedDelivery: ZonedDateTime,
+                           delivered: ZonedDateTime,
+                           count: Int)
 }
 
 

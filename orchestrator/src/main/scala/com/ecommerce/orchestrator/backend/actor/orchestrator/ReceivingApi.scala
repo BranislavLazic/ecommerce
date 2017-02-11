@@ -26,6 +26,9 @@ trait ReceivingApi {
 
   def receivingClient: ActorRef
 
+  def getShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] =
+    receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
+
   def createShipment(productId: UUID, count: Int): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(CreateShipment(productId, count)).mapTo[HttpClientResult[ShipmentView]]
 

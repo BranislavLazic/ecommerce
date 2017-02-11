@@ -17,5 +17,5 @@ object InventoryRequest {
 }
 
 object InventoryResponse {
-  case class InventoryItemView(ItemId: UUID)
+  case class InventoryItemView(productId: UUID, inStock: Int, onBackorder: Int)
 }

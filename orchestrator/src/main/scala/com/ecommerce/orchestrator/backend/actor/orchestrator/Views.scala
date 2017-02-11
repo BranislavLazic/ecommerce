@@ -22,6 +22,7 @@ object ResponseViews {
 
   case class ReceivingSummaryView(
                                    productId: UUID,
+                                   shipmentId: UUID,
                                    dateOrdered: ZonedDateTime,
                                    amountOrdered: Int,
                                    expectedDelivery: ZonedDateTime,
