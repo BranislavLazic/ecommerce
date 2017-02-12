@@ -1,4 +1,4 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend.clientapi
 
 import java.util.UUID
 
@@ -6,20 +6,19 @@ import akka.actor.ActorRef
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
-import com.ecommerce.common.views.ShoppingCartRequest
-import com.ecommerce.common.views.ShoppingCartResponse
+import com.ecommerce.common.views.{ShoppingCartRequest, ShoppingCartResponse}
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by lukewyman on 2/8/17.
   */
 trait ShoppingCartApi {
-  import akka.pattern.ask
   import HttpClient._
   import ShoppingCartProtocol._
   import ShoppingCartRequest._
   import ShoppingCartResponse._
+  import akka.pattern.ask
 
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout

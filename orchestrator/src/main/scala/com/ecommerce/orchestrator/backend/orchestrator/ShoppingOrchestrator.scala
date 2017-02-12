@@ -1,13 +1,14 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend.orchestrator
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, Actor, Props}
+import akka.actor.{Actor, Props}
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.implicits._
 import com.ecommerce.common.clientactors.http._
 import com.ecommerce.common.clientactors.kafka._
+import com.ecommerce.orchestrator.backend.clientapi.{ShoppingCartApi, PaymentApi, InventoryApi}
 
 import scala.concurrent.duration._
 
@@ -32,8 +33,8 @@ class ShoppingOrchestrator extends Actor
   with ShoppingCartApi
   with InventoryApi
   with PaymentApi {
-  import akka.pattern.pipe
   import ShoppingOrchestrator._
+  import akka.pattern.pipe
 
   implicit def executionContext = context.dispatcher
   implicit def timeout: Timeout = Timeout(3 seconds)
@@ -66,11 +67,9 @@ class ShoppingOrchestrator extends Actor
       /* what should happen here is that an Order should be created, and the Order with it's OrderStatus
         should be returned to the caller. Returning the ShoppingCartView is a stop-gap until the Order
         microservice is built out.And, yes, I know that payment/amount due is woefully over-simplified here */
-      val scF = EitherT(getShoppingCart(scid))
-      val pF = EitherT(pay(cc))
       val result = for {
-        sc <- scF
-        p <- pF
+        sc <- EitherT(getShoppingCart(scid))
+        p <- EitherT(pay(cc))
         cs = sc.items.map(i => claimInventory(sc.shoppingCartId, i.itemId, p.paymentId))
       } yield sc
       result.value.pipeTo(sender())

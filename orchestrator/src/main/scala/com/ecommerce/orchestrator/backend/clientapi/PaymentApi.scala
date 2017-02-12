@@ -1,4 +1,4 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend.clientapi
 
 import akka.actor.ActorRef
 import akka.util.Timeout
@@ -6,14 +6,14 @@ import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.clientactors.http.PaymentHttpClient.Pay
 import com.ecommerce.common.views.PaymentResponse.PaymentTokenView
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by lukewyman on 2/8/17.
   */
 trait PaymentApi {
-  import akka.pattern.ask
   import HttpClient._
+  import akka.pattern.ask
 
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout

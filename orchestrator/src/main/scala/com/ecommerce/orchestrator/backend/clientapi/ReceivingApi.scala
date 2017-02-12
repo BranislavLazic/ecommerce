@@ -1,4 +1,4 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend.clientapi
 
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -9,17 +9,17 @@ import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
 import com.ecommerce.common.views.ReceivingResponse
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by lukewyman on 2/8/17.
   */
 trait ReceivingApi {
 
-  import akka.pattern.ask
   import HttpClient._
-  import ReceivingResponse._
   import ReceivingProtocol._
+  import ReceivingResponse._
+  import akka.pattern.ask
 
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout

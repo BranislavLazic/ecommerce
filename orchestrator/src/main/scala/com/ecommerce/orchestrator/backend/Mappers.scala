@@ -1,7 +1,6 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend
 
-import com.ecommerce.common.views.InventoryResponse
-import com.ecommerce.common.views.ReceivingResponse
+import com.ecommerce.common.views.{InventoryResponse, ReceivingResponse}
 
 /**
   * Created by lukewyman on 2/8/17.

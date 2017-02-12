@@ -1,33 +1,31 @@
-package com.ecommerce.orchestrator.api
+package com.ecommerce.orchestrator.api.routes
 
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives
-import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.{Directives, _}
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
 import com.ecommerce.common.views.ShoppingCartRequest.AddItemView
-import com.ecommerce.orchestrator.backend.actor.orchestrator.RequestViews
-import com.ecommerce.common.views.ShoppingCartResponse.{ShoppingCartView}
-import com.ecommerce.orchestrator.backend.actor.orchestrator.ShoppingOrchestrator
+import com.ecommerce.common.views.ShoppingCartResponse.ShoppingCartView
+import com.ecommerce.orchestrator.backend.RequestViews
+import com.ecommerce.orchestrator.backend.orchestrator.ShoppingOrchestrator
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.ExecutionContext
-import scala.util.Try
 
 /**
   * Created by lukewyman on 1/31/17.
   */
 trait ShoppingRoutes {
-  import akka.pattern.ask
-  import Directives._
-  import StatusCodes._
   import CirceSupport._
-  import io.circe.generic.auto._
-  import ShoppingOrchestrator._
+  import Directives._
   import RequestViews._
+  import ShoppingOrchestrator._
+  import StatusCodes._
+  import akka.pattern.ask
+  import io.circe.generic.auto._
 
   def system: ActorSystem
 

@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.{Route, Directives}
 import akka.util.Timeout
+import com.ecommerce.orchestrator.api.routes.{ShoppingRoutes, ReceivingRoutes}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try

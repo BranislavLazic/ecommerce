@@ -1,4 +1,4 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend
 
 import java.time.ZonedDateTime
 import java.util.UUID

@@ -1,16 +1,19 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend.orchestrator
 
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import akka.actor.{Props, Actor}
+import akka.actor.{Actor, Props}
 import akka.util.Timeout
 import cats.Applicative
 import cats.data.EitherT
 import cats.implicits._
-import com.ecommerce.common.clientactors.http.HttpClient.{HttpClientError}
+import com.ecommerce.common.clientactors.http.HttpClient.HttpClientError
 import com.ecommerce.common.clientactors.http._
 import com.ecommerce.common.clientactors.kafka.InventoryKafkaClient
+import com.ecommerce.orchestrator.backend.Mappers
+import com.ecommerce.orchestrator.backend.clientapi.{ReceivingApi, InventoryApi}
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -32,9 +35,9 @@ object ReceivingOrchestrator {
 class ReceivingOrchestrator extends Actor
   with ReceivingApi
   with InventoryApi {
-  import akka.pattern.pipe
-  import ReceivingOrchestrator._
   import Mappers._
+  import ReceivingOrchestrator._
+  import akka.pattern.pipe
 
   implicit def executionContext = context.dispatcher
   implicit def timeout: Timeout = Timeout(3 seconds)

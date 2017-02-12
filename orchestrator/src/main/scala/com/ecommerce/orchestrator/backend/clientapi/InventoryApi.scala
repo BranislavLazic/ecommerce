@@ -1,4 +1,4 @@
-package com.ecommerce.orchestrator.backend.actor.orchestrator
+package com.ecommerce.orchestrator.backend.clientapi
 
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -7,20 +7,19 @@ import akka.actor.ActorRef
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
-import com.ecommerce.common.views.InventoryRequest
-import com.ecommerce.common.views.InventoryResponse
+import com.ecommerce.common.views.{InventoryRequest, InventoryResponse}
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by lukewyman on 2/8/17.
   */
 trait InventoryApi {
-  import akka.pattern.ask
   import HttpClient._
   import InventoryProtocol._
   import InventoryRequest._
   import InventoryResponse._
+  import akka.pattern.ask
 
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
@@ -45,8 +44,4 @@ trait InventoryApi {
 
   def claimInventory(shoppingCartId: UUID, itemId: UUID, paymentId: UUID): Future[HttpClientResult[ClaimItemView]] =
     inventoryQueue.ask(ClaimItem(shoppingCartId, itemId, paymentId)).mapTo[HttpClientResult[ClaimItemView]]
-
-
-
-
 }

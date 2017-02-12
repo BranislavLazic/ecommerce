@@ -1,33 +1,31 @@
-package com.ecommerce.orchestrator.api
+package com.ecommerce.orchestrator.api.routes
 
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives
-import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.{Directives, _}
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
-import com.ecommerce.orchestrator.backend.actor.orchestrator.ResponseViews
-import com.ecommerce.orchestrator.backend.actor.orchestrator.{ReceivingOrchestrator, RequestViews}
+import com.ecommerce.orchestrator.backend.orchestrator.ReceivingOrchestrator
+import com.ecommerce.orchestrator.backend.{RequestViews, ResponseViews}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.ExecutionContext
-import scala.util.Try
 
 /**
   * Created by lukewyman on 2/8/17.
   */
 trait ReceivingRoutes {
-  import akka.pattern.ask
   import Directives._
-  import StatusCodes._
   import CirceSupport._
   import io.circe.generic.auto._
   import io.circe.java8.time._
   import ReceivingOrchestrator._
   import RequestViews._
   import ResponseViews._
+  import StatusCodes._
+  import akka.pattern.ask
 
   def system: ActorSystem
 
