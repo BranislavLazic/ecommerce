@@ -46,7 +46,7 @@ trait ReceivingRoutes {
     get {
       pathPrefix( "receiving" / "shipments" / ShipmentId ) { shipmentId =>
         pathEndOrSingleSlash {
-          val gs = GetShipment(shipmentId)
+          val gs = GetShipmentSummary(shipmentId)
           val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
           onSuccess(receivingOrchestrator.ask(gs).mapTo[HttpClientResult[ReceivingSummaryView]]) {
             _.fold(complete(BadRequest, _), complete(OK, _))

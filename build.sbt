@@ -22,12 +22,13 @@ lazy val orchestratorSettings = Seq(
   addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3"),
   libraryDependencies ++=
     Groupings.akkaBasics ++
-      Groupings.akkaHttp ++
-      Groupings.circe ++
-      Seq(
-        Library.jodaTime,
-        Library.cats
-      )
+    Groupings.akkaHttp ++
+    Groupings.circe ++
+    Seq(
+      Library.scalaTest % "test",
+      Library.jodaTime,
+      Library.cats
+    )
 )
 
 lazy val orchestrator = project.in(file("orchestrator")).settings(orchestratorSettings).dependsOn(common)

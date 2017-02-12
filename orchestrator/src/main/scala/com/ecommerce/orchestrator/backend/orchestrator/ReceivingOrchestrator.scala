@@ -3,7 +3,7 @@ package com.ecommerce.orchestrator.backend.orchestrator
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import akka.actor.{Actor, Props}
+import akka.actor.{ActorLogging, Actor, Props}
 import akka.util.Timeout
 import cats.Applicative
 import cats.data.EitherT
@@ -26,13 +26,13 @@ object ReceivingOrchestrator {
 
   val name = "receiving-orchestrator"
 
-  case class GetShipment(shipmentId: UUID)
+  case class GetShipmentSummary(shipmentId: UUID)
   case class RequestShipment(productId: UUID, ordered: ZonedDateTime, count: Int)
   case class AcknowledgeShipment(itemId: UUID, shipmentId: UUID, expectedDelivery: ZonedDateTime, count: Int)
   case class AcceptShipment(itemId: UUID, shipmentId: UUID, delivered: ZonedDateTime, count: Int)
 }
 
-class ReceivingOrchestrator extends Actor
+class ReceivingOrchestrator extends Actor with ActorLogging
   with ReceivingApi
   with InventoryApi {
   import Mappers._
@@ -47,7 +47,7 @@ class ReceivingOrchestrator extends Actor
   val inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
 
   def receive = {
-    case GetShipment(sid) =>
+    case GetShipmentSummary(sid) =>
       val result = for {
         gs <- EitherT(getShipment(sid))
         gi <- EitherT(getInventoryItem(gs.productId))
@@ -74,5 +74,5 @@ class ReceivingOrchestrator extends Actor
       kill()
   }
 
-  def kill() = ??? // TODO: implementation to kill http cleint actors and self
+  def kill() = log.info("should kill children and self here!") // TODO: implementation to kill http cleint actors and self
 }

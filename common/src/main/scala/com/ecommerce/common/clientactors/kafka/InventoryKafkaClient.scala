@@ -1,6 +1,6 @@
 package com.ecommerce.common.clientactors.kafka
 
-import akka.actor.{Props, Actor}
+import akka.actor.{ActorLogging, Props, Actor}
 
 /**
   * Created by lukewyman on 2/5/17.
@@ -12,8 +12,10 @@ object InventoryKafkaClient {
   val name = "inventory-kafka-client"
 }
 
-class InventoryKafkaClient extends Actor {
+class InventoryKafkaClient extends Actor with ActorLogging {
 
-  def receive = ???
+  def receive = {
+    case _ => log.info("received something")
+  }
 
 }
