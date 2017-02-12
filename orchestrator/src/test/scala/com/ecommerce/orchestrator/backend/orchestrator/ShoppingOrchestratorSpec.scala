@@ -36,19 +36,8 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
 
     "Return a ShoppingCartView for StartShopping" in {
 
-      val inventoryClientProbe = TestProbe("inventory-client")
-      val inventoryQueueProbe = TestProbe("inventory-queue")
-      val paymentClientProbe = TestProbe("payment-client")
-      val shoppingCartClientProbe = TestProbe("shoppingcart-client")
-
-      val shoppingOrchestrator = system.actorOf(Props(
-        new ShoppingOrchestrator {
-          override val inventoryClient = inventoryClientProbe.ref
-          override val inventoryQueue = inventoryQueueProbe.ref
-          override val paymentClient = paymentClientProbe.ref
-          override val shoppingCartClient = shoppingCartClientProbe.ref
-        }
-      ), "shopping-orchestrator")
+      val (inventoryClientProbe, inventoryQueueProbe, paymentClientProbe, shoppingCartClientProbe,
+        shoppingOrchestrator) = createTestActors
 
       val shoppingCartId = UUID.randomUUID()
       val customerId = UUID.randomUUID()
@@ -58,5 +47,23 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
       shoppingCartClientProbe.reply(Right(ShoppingCartView(shoppingCartId, Some(customerId), List.empty)))
       expectMsg(Right(ShoppingCartView(shoppingCartId, Some(customerId), List.empty)))
     }
+  }
+
+  def createTestActors: (TestProbe, TestProbe, TestProbe, TestProbe, ActorRef) = {
+    val inventoryClientProbe = TestProbe("inventory-client")
+    val inventoryQueueProbe = TestProbe("inventory-queue")
+    val paymentClientProbe = TestProbe("payment-client")
+    val shoppingCartClientProbe = TestProbe("shoppingcart-client")
+
+    (inventoryClientProbe, inventoryQueueProbe, paymentClientProbe, shoppingCartClientProbe,
+      system.actorOf(Props(
+        new ShoppingOrchestrator {
+          override val inventoryClient = inventoryClientProbe.ref
+          override val inventoryQueue = inventoryQueueProbe.ref
+          override val paymentClient = paymentClientProbe.ref
+          override val shoppingCartClient = shoppingCartClientProbe.ref
+        }
+      ), "shopping-orchestrator")
+    )
   }
 }

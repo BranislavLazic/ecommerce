@@ -34,17 +34,7 @@ with StopSystemAfterAll {
 
     "Return a ReceivingSummaryView for GetShipment" in {
 
-      val receivingClientProbe = TestProbe("receiving-client")
-      val inventoryClientProbe = TestProbe("inventory-client")
-      val inventoryQueueProbe = TestProbe("inventory-queue")
-
-      val receivingOrchestrator = system.actorOf(Props(
-        new ReceivingOrchestrator {
-          override val receivingClient = receivingClientProbe.ref
-          override val inventoryClient = inventoryClientProbe.ref
-          override val inventoryQueue = inventoryQueueProbe.ref
-        }
-      ), "receiving-orchestrator")
+      val (receivingClientProbe, inventoryClientProbe, inventoryQueueProbe, receivingOrchestrator) = createTestActors
 
       val shipmentId = UUID.randomUUID()
       val productId = UUID.randomUUID()
@@ -72,4 +62,21 @@ with StopSystemAfterAll {
       )))
     }
   }
+
+  def createTestActors(implicit system: ActorSystem): (TestProbe, TestProbe, TestProbe, ActorRef) = {
+    val receivingClientProbe = TestProbe("receiving-client")
+    val inventoryClientProbe = TestProbe("inventory-client")
+    val inventoryQueueProbe = TestProbe("inventory-queue")
+
+    (receivingClientProbe, inventoryClientProbe, inventoryQueueProbe,
+      system.actorOf(Props(
+        new ReceivingOrchestrator {
+          override val receivingClient = receivingClientProbe.ref
+          override val inventoryClient = inventoryClientProbe.ref
+          override val inventoryQueue = inventoryQueueProbe.ref
+        }
+      ), "receiving-orchestrator")
+    )
+  }
+
 }
