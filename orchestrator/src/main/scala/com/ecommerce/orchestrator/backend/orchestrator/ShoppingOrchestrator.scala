@@ -2,7 +2,7 @@ package com.ecommerce.orchestrator.backend.orchestrator
 
 import java.util.UUID
 
-import akka.actor.{Actor, Props}
+import akka.actor.{ActorLogging, Actor, Props}
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.implicits._
@@ -29,7 +29,7 @@ object ShoppingOrchestrator {
   case class ClearCart(shoppingCartId: UUID)
 }
 
-class ShoppingOrchestrator extends Actor
+class ShoppingOrchestrator extends Actor with ActorLogging
   with ShoppingCartApi
   with InventoryApi
   with PaymentApi {
@@ -76,5 +76,5 @@ class ShoppingOrchestrator extends Actor
       kill()
   }
 
-  def kill() = ??? // TODO: implementation to kill http cleint actors and self
+  def kill() = log.info("killing children and self after processing message") // TODO: implementation to kill http cleint actors and self
 }

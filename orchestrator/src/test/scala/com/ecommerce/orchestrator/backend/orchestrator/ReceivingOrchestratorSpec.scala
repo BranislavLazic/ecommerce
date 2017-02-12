@@ -3,17 +3,15 @@ package com.ecommerce.orchestrator.backend.orchestrator
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import akka.actor.Status.Success
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.testkit.{TestProbe, DefaultTimeout, ImplicitSender, TestKit}
-import com.ecommerce.common.views.InventoryResponse.InventoryItemView
+import com.ecommerce.common.views.InventoryResponse
 import com.ecommerce.common.views.ReceivingResponse
 import com.ecommerce.orchestrator.backend.ResponseViews
 import org.scalatest.{WordSpecLike, MustMatchers}
 import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 
 /**
   * Created by lukewyman on 2/11/17.
@@ -25,11 +23,11 @@ with ImplicitSender
 with DefaultTimeout
 with StopSystemAfterAll {
 
-  import akka.pattern.ask
   import ReceivingOrchestrator._
   import ReceivingProtocol._
   import InventoryProtocol._
   import ReceivingResponse._
+  import InventoryResponse._
   import ResponseViews._
 
   "The ReceivingOrchestrator" must {
@@ -55,13 +53,12 @@ with StopSystemAfterAll {
       val delivered = null.asInstanceOf[ZonedDateTime]
       val count = 100
 
-      val result = receivingOrchestrator ! GetShipmentSummary(shipmentId)
+      receivingOrchestrator ! GetShipmentSummary(shipmentId)
       receivingClientProbe.expectMsg(GetShipment(shipmentId))
       receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId,  ordered, expectedDelivery, delivered, count)))
       inventoryClientProbe.expectMsg(GetItem(productId))
       inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
       inventoryQueueProbe.expectNoMsg()
-
 
       expectMsg(5 seconds, Right(ReceivingSummaryView(
         productId,
