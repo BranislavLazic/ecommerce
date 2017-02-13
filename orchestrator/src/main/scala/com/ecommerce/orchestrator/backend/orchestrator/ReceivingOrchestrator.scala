@@ -55,7 +55,7 @@ class ReceivingOrchestrator extends Actor with ActorLogging
       result.value.pipeTo(sender())
       kill()
     case RequestShipment(pid, o, c) =>
-      val cs = EitherT(createShipment(pid, c))
+      val cs = EitherT(createShipment(pid, o, c))
       val gi = EitherT(getInventoryItem(pid))
       Applicative[EitherT[Future, HttpClientError, ?]].map2(cs, gi)(mapToReceivingSummaryView)
         .value.pipeTo(sender())

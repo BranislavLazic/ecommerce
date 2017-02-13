@@ -34,11 +34,12 @@ with StopSystemAfterAll {
 
     "Return a ReceivingSummaryView for GetShipment" in {
 
-      val (receivingClientProbe, inventoryClientProbe, inventoryQueueProbe, receivingOrchestrator) = createTestActors
+      val (receivingOrchestrator, receivingClientProbe, inventoryClientProbe, inventoryQueueProbe) =
+        createTestActors("get-shipment")
 
       val shipmentId = UUID.randomUUID()
       val productId = UUID.randomUUID()
-      val ordered = ZonedDateTime.now.plusDays(10)
+      val ordered = ZonedDateTime.now
       val expectedDelivery = null.asInstanceOf[ZonedDateTime]
       val delivered = null.asInstanceOf[ZonedDateTime]
       val count = 100
@@ -61,22 +62,51 @@ with StopSystemAfterAll {
         10
       )))
     }
+
+   "Return a ReceivingSummaryView for RequestShipment" in {
+     val (receivingOrchestrator, receivingClientProbe, inventoryClientProbe, inventoryQueueProbe) =
+       createTestActors("request-shipment")
+
+     val shipmentId = UUID.randomUUID()
+     val productId = UUID.randomUUID()
+     val count = 100
+     val ordered = ZonedDateTime.now
+     val expectedDelivery = null.asInstanceOf[ZonedDateTime]
+     val delivered = null.asInstanceOf[ZonedDateTime]
+
+     receivingOrchestrator ! RequestShipment(productId, ordered, count)
+     receivingClientProbe.expectMsg(CreateShipment(productId, ordered, count))
+     receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId, ordered, expectedDelivery, delivered, count)))
+     inventoryClientProbe.expectMsg(GetItem(productId))
+     inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
+     inventoryQueueProbe.expectNoMsg()
+
+     expectMsg(5 seconds, Right(ReceivingSummaryView(
+       productId,
+       shipmentId,
+       ordered,
+       count,
+       expectedDelivery,
+       delivered,
+       20,
+       10
+     )))
+   }
   }
 
-  def createTestActors(implicit system: ActorSystem): (TestProbe, TestProbe, TestProbe, ActorRef) = {
+  def createTestActors(orcchestratorName: String): (ActorRef, TestProbe, TestProbe, TestProbe) = {
     val receivingClientProbe = TestProbe("receiving-client")
     val inventoryClientProbe = TestProbe("inventory-client")
     val inventoryQueueProbe = TestProbe("inventory-queue")
 
-    (receivingClientProbe, inventoryClientProbe, inventoryQueueProbe,
-      system.actorOf(Props(
-        new ReceivingOrchestrator {
-          override val receivingClient = receivingClientProbe.ref
-          override val inventoryClient = inventoryClientProbe.ref
-          override val inventoryQueue = inventoryQueueProbe.ref
-        }
-      ), "receiving-orchestrator")
-    )
+    (system.actorOf(Props(
+      new ReceivingOrchestrator {
+        override val receivingClient = receivingClientProbe.ref
+        override val inventoryClient = inventoryClientProbe.ref
+        override val inventoryQueue = inventoryQueueProbe.ref
+      }
+    ), orcchestratorName),
+      receivingClientProbe, inventoryClientProbe, inventoryQueueProbe)
   }
 
 }

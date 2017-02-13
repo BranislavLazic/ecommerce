@@ -8,7 +8,7 @@ import java.util.UUID
   */
 object ReceivingProtocol {
 
-  case class CreateShipment(productId: UUID, count: Int)
+  case class CreateShipment(productId: UUID, ordered: ZonedDateTime, count: Int)
   case class GetShipment(shipmentId: UUID)
   case class AcknowledgeShipment(shipmentId: UUID, expectedDelivery: ZonedDateTime)
   case class AcceptShipment(shipmentId: UUID)

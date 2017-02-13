@@ -9,7 +9,7 @@ import java.util.UUID
 
 object ReceivingRequest {
 
-  case class CreateShipmentView(productId: UUID, count: Int)
+  case class CreateShipmentView(productId: UUID, ordered: ZonedDateTime, count: Int)
   case class AcknowledgeShipmentView(expectedDelivery: ZonedDateTime)
 }
 

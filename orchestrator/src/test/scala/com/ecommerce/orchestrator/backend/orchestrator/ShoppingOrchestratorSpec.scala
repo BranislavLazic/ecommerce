@@ -12,8 +12,6 @@ import com.ecommerce.orchestrator.backend.orchestrator.ShoppingOrchestrator
 import org.scalatest.{WordSpecLike, MustMatchers}
 import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
-import com.ecommerce.common.clientactors
-import scala.concurrent.duration._
 
 /**
   * Created by lukewyman on 2/11/17.
@@ -23,7 +21,7 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
   with MustMatchers
   with ImplicitSender
   with DefaultTimeout
-  with StopSystemAfterAll{
+  with StopSystemAfterAll {
 
   import ShoppingOrchestrator._
   import InventoryProtocol._
@@ -36,8 +34,8 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
 
     "Return a ShoppingCartView for StartShopping" in {
 
-      val (inventoryClientProbe, inventoryQueueProbe, paymentClientProbe, shoppingCartClientProbe,
-        shoppingOrchestrator) = createTestActors
+      val (shoppingOrchestrator, inventoryClientProbe, inventoryQueueProbe, paymentClientProbe,
+        shoppingCartClientProbe) = createTestActors("shopping-orchestrator-1")
 
       val shoppingCartId = UUID.randomUUID()
       val customerId = UUID.randomUUID()
@@ -49,21 +47,20 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
     }
   }
 
-  def createTestActors: (TestProbe, TestProbe, TestProbe, TestProbe, ActorRef) = {
+  def createTestActors(orchestratorName: String): (ActorRef, TestProbe, TestProbe, TestProbe, TestProbe) = {
     val inventoryClientProbe = TestProbe("inventory-client")
     val inventoryQueueProbe = TestProbe("inventory-queue")
     val paymentClientProbe = TestProbe("payment-client")
     val shoppingCartClientProbe = TestProbe("shoppingcart-client")
 
-    (inventoryClientProbe, inventoryQueueProbe, paymentClientProbe, shoppingCartClientProbe,
-      system.actorOf(Props(
-        new ShoppingOrchestrator {
-          override val inventoryClient = inventoryClientProbe.ref
-          override val inventoryQueue = inventoryQueueProbe.ref
-          override val paymentClient = paymentClientProbe.ref
-          override val shoppingCartClient = shoppingCartClientProbe.ref
-        }
-      ), "shopping-orchestrator")
-    )
+    (system.actorOf(Props(
+      new ShoppingOrchestrator {
+        override val inventoryClient = inventoryClientProbe.ref
+        override val inventoryQueue = inventoryQueueProbe.ref
+        override val paymentClient = paymentClientProbe.ref
+        override val shoppingCartClient = shoppingCartClientProbe.ref
+      }
+    ), orchestratorName),
+      inventoryClientProbe, inventoryQueueProbe, paymentClientProbe, shoppingCartClientProbe)
   }
 }

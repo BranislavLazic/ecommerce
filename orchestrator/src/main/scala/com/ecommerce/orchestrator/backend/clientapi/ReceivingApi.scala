@@ -29,8 +29,8 @@ trait ReceivingApi {
   def getShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
 
-  def createShipment(productId: UUID, count: Int): Future[HttpClientResult[ShipmentView]] =
-    receivingClient.ask(CreateShipment(productId, count)).mapTo[HttpClientResult[ShipmentView]]
+  def createShipment(productId: UUID, ordered: ZonedDateTime, count: Int): Future[HttpClientResult[ShipmentView]] =
+    receivingClient.ask(CreateShipment(productId, ordered, count)).mapTo[HttpClientResult[ShipmentView]]
 
   def acknowledgeShipment(shipmentId: UUID, expectedDelivery: ZonedDateTime): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(AcknowledgeShipment(shipmentId, expectedDelivery)).mapTo[HttpClientResult[ShipmentView]]
