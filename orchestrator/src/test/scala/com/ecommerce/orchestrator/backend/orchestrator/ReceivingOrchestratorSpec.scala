@@ -17,11 +17,11 @@ import scala.concurrent.duration._
   * Created by lukewyman on 2/11/17.
   */
 class ReceivingOrchestratorSpec extends TestKit(ActorSystem("test-receiving-orchestrator"))
-with WordSpecLike
-with MustMatchers
-with ImplicitSender
-with DefaultTimeout
-with StopSystemAfterAll {
+  with WordSpecLike
+  with MustMatchers
+  with ImplicitSender
+  with DefaultTimeout
+  with StopSystemAfterAll {
 
   import ReceivingOrchestrator._
   import ReceivingProtocol._
@@ -92,6 +92,66 @@ with StopSystemAfterAll {
        10
      )))
    }
+  }
+
+  "Return a ReceivingSummaryView for AcknowledgeShipment" in {
+    val (receivingOrchestrator, receivingClientProbe, inventoryClientProbe, inventoryQueueProbe) =
+      createTestActors("acknowledge-shipment")
+
+    val shipmentId = UUID.randomUUID()
+    val productId = UUID.randomUUID()
+    val count = 100
+    val ordered = ZonedDateTime.now.plusDays(-10)
+    val expectedDelivery = ZonedDateTime.now
+    val delivered = null.asInstanceOf[ZonedDateTime]
+
+    receivingOrchestrator ! ReceivingOrchestrator.AcknowledgeShipment(productId, shipmentId, expectedDelivery, count)
+    receivingClientProbe.expectMsg(ReceivingProtocol.AcknowledgeShipment(shipmentId, expectedDelivery))
+    receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId, ordered, expectedDelivery, delivered, count)))
+    inventoryClientProbe.expectMsg(NotifySupply(productId, shipmentId, expectedDelivery, count))
+    inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
+    inventoryQueueProbe.expectNoMsg()
+
+    expectMsg(5 seconds, Right(ReceivingSummaryView(
+      productId,
+      shipmentId,
+      ordered,
+      count,
+      expectedDelivery,
+      delivered,
+      20,
+      10
+    )))
+  }
+
+  "Return a ReceivingSummaryView for AcceptShipment" in {
+    val (receivingOrchestrator, receivingClientProbe, inventoryClientProbe, inventoryQueueProbe) =
+      createTestActors("accept-shipment")
+
+    val shipmentId = UUID.randomUUID()
+    val productId = UUID.randomUUID()
+    val count = 100
+    val ordered = ZonedDateTime.now.plusDays(-20)
+    val expectedDelivery = ZonedDateTime.now.plusDays(-10)
+    val delivered = ZonedDateTime.now
+
+    receivingOrchestrator ! ReceivingOrchestrator.AcceptShipment(productId, shipmentId, delivered, count)
+    receivingClientProbe.expectMsg(ReceivingProtocol.AcceptShipment(shipmentId))
+    receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId, ordered, expectedDelivery, delivered, count)))
+    inventoryClientProbe.expectMsg(ReceiveSupply(productId, shipmentId, delivered, count))
+    inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
+    inventoryQueueProbe.expectNoMsg()
+
+    expectMsg(5 seconds, Right(ReceivingSummaryView(
+      productId,
+      shipmentId,
+      ordered,
+      count,
+      expectedDelivery,
+      delivered,
+      20,
+      10
+    )))
   }
 
   def createTestActors(orcchestratorName: String): (ActorRef, TestProbe, TestProbe, TestProbe) = {
