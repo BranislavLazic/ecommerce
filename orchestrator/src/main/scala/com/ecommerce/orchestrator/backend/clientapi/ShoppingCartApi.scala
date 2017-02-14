@@ -31,8 +31,8 @@ trait ShoppingCartApi {
   def getShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(GetShoppingCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
 
-  def addItem(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[AddItemView]] =
-    shoppingCartClient.ask(AddItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[AddItemView]]
+  def addItem(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[ShoppingCartView]] =
+    shoppingCartClient.ask(AddItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[ShoppingCartView]]
 
   def removeItem(shoppingCartId: UUID, itemId: UUID): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(RemoveItem(shoppingCartId, itemId)).mapTo[HttpClientResult[ShoppingCartView]]

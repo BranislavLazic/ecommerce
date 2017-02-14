@@ -26,7 +26,6 @@ object ShoppingOrchestrator {
   case class Checkout(shoppingCartId: UUID, creditCard: String)
   case class PlaceInCart(shoppingCartId: UUID, itemId: UUID, count: Int, backorder: Boolean)
   case class RemoveFromCart(shoppingCartId: UUID, itemId: UUID)
-  case class ClearCart(shoppingCartId: UUID)
 }
 
 class ShoppingOrchestrator extends Actor with ActorLogging
