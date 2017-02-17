@@ -12,6 +12,7 @@ import scala.concurrent.Future
 import com.ecommerce.common.views.InventoryRequest
 import com.ecommerce.common.views.InventoryResponse
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
+import com.ecommerce.common.identity.Identity
 
 /**
   * Created by lukewyman on 2/5/17.
@@ -27,24 +28,25 @@ class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClie
   import InventoryProtocol._
   import InventoryRequest._
   import akka.pattern.pipe
+
   implicit def executionContext = context.dispatcher
   implicit def system = context.system
 
   def receive = {
-    case CreateItem(iid) =>
-      createItem(CreateItemView(iid)).pipeTo(sender())
-    case GetItem(iid) =>
-      getItem(iid).pipeTo(sender())
-    case ReceiveSupply(iid, sid, d, c) =>
-      acceptShipment(iid, ReceiveSupplyView(sid, d, c)).pipeTo(sender())
-    case NotifySupply(iid, sid, ed, c) =>
-      acknowledgeShipment(iid, NotifySupplyView(sid, ed, c)).pipeTo(sender())
-    case HoldItem(iid, scid, c) =>
-      holdItem(iid, scid, HoldItemView(c)).pipeTo(sender())
-    case ReserveItem(iid, cid, c) =>
-      reserveItem(iid, ReserveItemView(cid, null, c)).pipeTo(sender())
-    case ReleaseItem(iid, scid) =>
-      abandonCart(iid, scid).pipeTo(sender())
+    case CreateItem(pid) =>
+      createItem(CreateItemView(pid.id)).pipeTo(sender())
+    case GetItem(pid) =>
+      getItem(pid).pipeTo(sender())
+    case ReceiveSupply(pid, sid, d, c) =>
+      acceptShipment(pid, ReceiveSupplyView(sid.id, null, d, c)).pipeTo(sender())
+    case NotifySupply(pid, sid, ed, c) =>
+      acknowledgeShipment(pid, NotifySupplyView(sid.id, ed, c)).pipeTo(sender())
+    case HoldItem(pid, scid, c) =>
+      holdItem(pid, scid, HoldItemView(c)).pipeTo(sender())
+    case ReserveItem(pid, cid, c) =>
+      reserveItem(pid, ReserveItemView(cid.id, null, null, c)).pipeTo(sender())
+    case ReleaseItem(pid, scid) =>
+      abandonCart(pid, scid).pipeTo(sender())
     case ClaimItem(iid, scid, pid) =>
       checkout(iid, scid, CheckoutView("")).pipeTo(sender())
   }
@@ -58,6 +60,7 @@ trait InventoryHttpClientApi extends HttpClient {
   import InventoryRequest._
   import InventoryResponse._
   import HttpClient._
+  import Identity._
 
   def createItem(civ: CreateItemView): Future[HttpClientResult[InventoryItemView]] = {
 
@@ -70,75 +73,75 @@ trait InventoryHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def getItem(itemId: UUID): Future[HttpClientResult[InventoryItemView]] = {
+  def getItem(productId: ProductRef): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.GET,
-      uri = Uri(path = Path(s"/items/${itemId}"))))
+      uri = Uri(path = Path(s"/items/${productId}"))))
     val flow = http.outgoingConnection(host = "localhost", port = 9000).mapAsync(1) { r =>
       deserialize[InventoryItemView](r)
     }
     source.via(flow).runWith(Sink.head)
   }
 
-  def acceptShipment(itemId: UUID, asv: ReceiveSupplyView): Future[HttpClientResult[InventoryItemView]] = {
+  def acceptShipment(productId: ProductRef, asv: ReceiveSupplyView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, asv.asJson.toString()),
-      uri = Uri(path = Path(s"/items/${itemId}/shipments"))))
+      uri = Uri(path = Path(s"/items/${productId}/shipments"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[InventoryItemView](r)
     }
     source.via(flow).runWith(Sink.head)
   }
 
-  def acknowledgeShipment(itemId: UUID, asv: NotifySupplyView): Future[HttpClientResult[InventoryItemView]] = {
+  def acknowledgeShipment(productId: ProductRef, asv: NotifySupplyView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, asv.asJson.toString()),
-      uri = Uri(path = Path(s"/items/${itemId}/acknowledgements"))))
+      uri = Uri(path = Path(s"/items/${productId}/acknowledgements"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[InventoryItemView](r)
     }
     source.via(flow).runWith(Sink.head)
   }
 
-  def holdItem(itemId: UUID, shoppingCartId: UUID, hiv: HoldItemView): Future[HttpClientResult[InventoryItemView]] = {
+  def holdItem(productId: ProductRef, shoppingCartId: ShoppingCartRef, hiv: HoldItemView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, hiv.asJson.toString()),
-      uri = Uri(path = Path(s"/items/${itemId}/shoppingcarts/${shoppingCartId}"))))
+      uri = Uri(path = Path(s"/items/${productId}/shoppingcarts/${shoppingCartId}"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) {r =>
       deserialize[InventoryItemView](r)
     }
     source.via(flow).runWith(Sink.head)
   }
 
-  def reserveItem(itemId: UUID, riv: ReserveItemView): Future[HttpClientResult[InventoryItemView]] = {
+  def reserveItem(productId: ProductRef, riv: ReserveItemView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, riv.asJson.toString()),
-      uri = Uri(path = Path(s"items/${itemId}/customers"))))
+      uri = Uri(path = Path(s"items/${productId}/customers"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[InventoryItemView](r)
     }
     source.via(flow).runWith(Sink.head)
   }
 
-  def abandonCart(itemId: UUID, shoppingCartId: UUID): Future[HttpClientResult[InventoryItemView]] = {
+  def abandonCart(productId: ProductRef, shoppingCartId: ShoppingCartRef): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.DELETE,
-      uri = Uri(path = Path(s"items/${itemId}/shoppingcarts/${shoppingCartId}"))))
+      uri = Uri(path = Path(s"items/${productId}/shoppingcarts/${shoppingCartId}"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[InventoryItemView](r)
     }
     source.via(flow).runWith(Sink.head)
   }
 
-  def checkout(itemId: UUID, shoppingCartId: UUID, cv: CheckoutView): Future[HttpClientResult[InventoryItemView]] = {
+  def checkout(productId: ProductRef, shoppingCartId: ShoppingCartRef, cv: CheckoutView): Future[HttpClientResult[InventoryItemView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, cv.asJson.toString()),
-      uri = Uri(path = Path(s"items/${itemId}/shoppingcarts/${shoppingCartId}/payments"))))
+      uri = Uri(path = Path(s"items/${productId}/shoppingcarts/${shoppingCartId}/payments"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[InventoryItemView](r)
     }

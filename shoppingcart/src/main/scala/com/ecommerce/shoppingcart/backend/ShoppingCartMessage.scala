@@ -1,6 +1,8 @@
 package com.ecommerce.shoppingcart.backend
 
 import ShoppingCart._
+import com.ecommerce.common.identity.Identity.{ProductRef, CustomerRef, ShoppingCartRef}
+
 /**
   * Created by lukewyman on 12/11/16.
   */
@@ -10,13 +12,13 @@ trait ShoppingCartMessage {
 
 sealed trait Command extends ShoppingCartMessage
 case class SetOwner(shoppingCartId: ShoppingCartRef, owner: CustomerRef) extends Command
-case class AddItem(shoppingCartId: ShoppingCartRef, item: ItemRef, count: Int) extends Command
-case class RemoveItem(shoppingCartId: ShoppingCartRef, item: ItemRef) extends Command
+case class AddItem(shoppingCartId: ShoppingCartRef, item: ProductRef, count: Int) extends Command
+case class RemoveItem(shoppingCartId: ShoppingCartRef, item: ProductRef) extends Command
 
 sealed trait Event extends ShoppingCartMessage with Serializable
 case class OwnerChanged(shoppingCartId: ShoppingCartRef, owner: CustomerRef) extends Event
-case class ItemAdded(shoppingCartId: ShoppingCartRef, item: ItemRef, count: Int) extends Event
-case class ItemRemoved(shoppingCartId: ShoppingCartRef, item: ItemRef) extends Event
+case class ItemAdded(shoppingCartId: ShoppingCartRef, item: ProductRef, count: Int) extends Event
+case class ItemRemoved(shoppingCartId: ShoppingCartRef, item: ProductRef) extends Event
 
 sealed trait Query extends ShoppingCartMessage
 case class GetItems(shoppingCartId: ShoppingCartRef) extends Query

@@ -3,12 +3,13 @@ package com.ecommerce.shoppingcart.backend
 import java.util.UUID
 
 import org.scalatest.{FlatSpec, Matchers}
+import com.ecommerce.common.identity.Identity
 
 /**
   * Created by lukewyman on 12/11/16.
   */
 class ShoppingCartSpec extends FlatSpec with Matchers {
-  import ShoppingCart._
+  import Identity._
 
   "A ShoppingCart" should "set the owner when new" in {
     val cart = ShoppingCart.empty
@@ -31,7 +32,7 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
 
   it should "add a new item to the cart" in {
     val cart = ShoppingCart.empty
-    val item = ItemRef(UUID.randomUUID)
+    val item = ProductRef(UUID.randomUUID)
 
     val updatedCart = cart.addItem(item, 1)
 
@@ -39,7 +40,7 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
   }
 
   it should "update the count of an existing item in a cart" in {
-    val item = ItemRef(UUID.randomUUID)
+    val item = ProductRef(UUID.randomUUID)
     val cart = ShoppingCart.empty.addItem(item, 1)
 
     val updatedCart = cart.addItem(item, 3)
@@ -48,7 +49,7 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
   }
 
   it should "remove an item from a cart" in {
-    val item = ItemRef(UUID.randomUUID)
+    val item = ProductRef(UUID.randomUUID)
     val cart = ShoppingCart.empty.addItem(item, 1)
 
     val updatedCart = cart.removeItem(item)
@@ -57,14 +58,14 @@ class ShoppingCartSpec extends FlatSpec with Matchers {
   }
 
   it should "not allow a negative count of items to be added" in {
-    val item = ItemRef(UUID.randomUUID)
+    val item = ProductRef(UUID.randomUUID)
     val cart = ShoppingCart.empty
 
     an [IllegalArgumentException] should be thrownBy cart.addItem(item, - 1)
   }
 
   it should "not allow a zero count of items to be added" in {
-    val item = ItemRef(UUID.randomUUID)
+    val item = ProductRef(UUID.randomUUID)
     val cart = ShoppingCart.empty
 
     an [IllegalArgumentException] should be thrownBy cart.addItem(item, 0)

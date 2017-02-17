@@ -6,6 +6,7 @@ import akka.actor.ActorRef
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
+import com.ecommerce.common.identity.Identity.{ProductRef, ShoppingCartRef, CustomerRef}
 import com.ecommerce.common.views.{ShoppingCartRequest, ShoppingCartResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,18 +26,18 @@ trait ShoppingCartApi {
 
   def shoppingCartClient: ActorRef
 
-  def createShoppingCart(shoppingCartId: UUID, customerId: UUID): Future[HttpClientResult[ShoppingCartView]] =
+  def createShoppingCart(shoppingCartId: ShoppingCartRef, customerId: CustomerRef): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(CreateShoppingCart(shoppingCartId, customerId)).mapTo[HttpClientResult[ShoppingCartView]]
 
-  def getShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] =
+  def getShoppingCart(shoppingCartId: ShoppingCartRef): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(GetShoppingCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
 
-  def addItem(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[ShoppingCartView]] =
-    shoppingCartClient.ask(AddItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[ShoppingCartView]]
+  def addItem(shoppingCartId: ShoppingCartRef, productId: ProductRef, count: Int): Future[HttpClientResult[ShoppingCartView]] =
+    shoppingCartClient.ask(AddItem(shoppingCartId, productId, count)).mapTo[HttpClientResult[ShoppingCartView]]
 
-  def removeItem(shoppingCartId: UUID, itemId: UUID): Future[HttpClientResult[ShoppingCartView]] =
-    shoppingCartClient.ask(RemoveItem(shoppingCartId, itemId)).mapTo[HttpClientResult[ShoppingCartView]]
+  def removeItem(shoppingCartId: ShoppingCartRef, productId: ProductRef): Future[HttpClientResult[ShoppingCartView]] =
+    shoppingCartClient.ask(RemoveItem(shoppingCartId, productId)).mapTo[HttpClientResult[ShoppingCartView]]
 
-  def clearShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] =
+  def clearShoppingCart(shoppingCartId: ShoppingCartRef): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(ClearCart(shoppingCartId)).mapTo[HttpClientResult[ShoppingCartView]]
 }

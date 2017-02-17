@@ -5,8 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorLogging, Props}
 import akka.cluster.sharding.ShardRegion
 import akka.persistence.PersistentActor
-import com.ecommerce.shoppingcart.backend.ShoppingCart.ShoppingCartRef
-
+import com.ecommerce.common.identity.Identity.ShoppingCartRef
 /**
   * Created by lukewyman on 12/16/16.
   * Domain Pattern and Cluster Sharding from "Reactive Design Patterns", Manning

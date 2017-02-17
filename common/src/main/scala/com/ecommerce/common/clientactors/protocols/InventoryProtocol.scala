@@ -3,17 +3,19 @@ package com.ecommerce.common.clientactors.protocols
 import java.time.ZonedDateTime
 import java.util.UUID
 
+import com.ecommerce.common.identity.Identity._
+
 /**
   * Created by lukewyman on 2/5/17.
   */
 object InventoryProtocol {
 
-  case class CreateItem(itemId: UUID)
-  case class GetItem(itemId: UUID)
-  case class ReceiveSupply(itemId: UUID, shipmentId: UUID, date: ZonedDateTime, count: Int)
-  case class NotifySupply(itemId: UUID, shipmentId: UUID, expectedDelivery: ZonedDateTime, count: Int)
-  case class HoldItem(itemId: UUID, shoppingCartId: UUID, count: Int)
-  case class ReserveItem(itemId: UUID, customerId: UUID, count: Int)
-  case class ReleaseItem(itemId: UUID, shoppingCartId: UUID)
-  case class ClaimItem(itemId: UUID, shoppingCartId: UUID, paymentId: UUID)
+  case class CreateItem(productId: ProductRef)
+  case class GetItem(productId: ProductRef)
+  case class ReceiveSupply(productId: ProductRef, shipmentId: ShipmentRef, date: ZonedDateTime, count: Int)
+  case class NotifySupply(productId: ProductRef, shipmentId: ShipmentRef, expectedDelivery: ZonedDateTime, count: Int)
+  case class HoldItem(productId: ProductRef, shoppingCartId: ShoppingCartRef, count: Int)
+  case class ReserveItem(productId: ProductRef, customerId: CustomerRef, count: Int)
+  case class ReleaseItem(productId: ProductRef, shoppingCartId: ShoppingCartRef)
+  case class ClaimItem(productId: ProductRef, shoppingCartId: ShoppingCartRef, paymentId: PaymentRef)
 }

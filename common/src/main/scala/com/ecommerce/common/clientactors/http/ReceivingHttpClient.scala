@@ -7,6 +7,7 @@ import akka.actor.{Props, Actor}
 import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Sink, Source}
+import com.ecommerce.common.identity.Identity
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
 import com.ecommerce.common.views.ReceivingRequest
@@ -53,8 +54,9 @@ trait ReceivingHttpClientApi extends HttpClient {
   import ReceivingRequest._
   import ReceivingResponse._
   import HttpClient._
+  import Identity._
 
-  def getShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] = {
+  def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.GET,
       uri = Uri(path = Path(s"/shipments/${shipmentId}"))))
@@ -64,10 +66,10 @@ trait ReceivingHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def createShipment(productId: UUID, ordered: ZonedDateTime, count: Int): Future[HttpClientResult[ShipmentView]] = {
+  def createShipment(productId: ProductRef, ordered: ZonedDateTime, count: Int): Future[HttpClientResult[ShipmentView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
-      entity = HttpEntity(ContentTypes.`application/json`, CreateShipmentView(productId, ordered, count).asJson.toString()),
+      entity = HttpEntity(ContentTypes.`application/json`, CreateShipmentView(productId.id, ordered, count).asJson.toString()),
       uri = Uri(path = Path("/shipments"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[ShipmentView](r)
@@ -75,7 +77,7 @@ trait ReceivingHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def acknowledgeShipment(shipmentId: UUID, expectedDelivery: ZonedDateTime): Future[HttpClientResult[ShipmentView]] = {
+  def acknowledgeShipment(shipmentId: ShipmentRef, expectedDelivery: ZonedDateTime): Future[HttpClientResult[ShipmentView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, AcknowledgeShipmentView(expectedDelivery).asJson.toString()),
@@ -86,7 +88,7 @@ trait ReceivingHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def acceptShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] = {
+  def acceptShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       uri = Uri(path = Path(s"/shipments/${shipmentId}/deliveries"))))

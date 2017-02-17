@@ -1,14 +1,14 @@
 package com.ecommerce.inventory.backend.domain
 
 import com.ecommerce.inventory.backend.InventoryItemManager._
-import com.ecommerce.inventory.backend.domain.Identity.ItemRef
+import com.ecommerce.common.identity.Identity._
 
 /**
   * Created by lukewyman on 1/4/17.
   */
-case class InventoryItem(product: Option[ItemRef], stock: Stock, backorder: Backorder) {
+case class InventoryItem(product: Option[ProductRef], stock: Stock, backorder: Backorder) {
 
-  def setProduct(item: ItemRef): InventoryItem = {
+  def setProduct(item: ProductRef): InventoryItem = {
     require(product.isEmpty, "product cannot be overwritten")
     copy(product = Some(item))
   }

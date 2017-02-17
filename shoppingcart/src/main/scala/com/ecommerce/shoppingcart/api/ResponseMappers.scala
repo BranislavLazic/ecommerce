@@ -2,6 +2,7 @@ package com.ecommerce.shoppingcart.api
 
 import java.util.UUID
 
+import com.ecommerce.common.identity.Identity.{ProductRef, ShoppingCartRef}
 import com.ecommerce.shoppingcart.backend.ShoppingCart
 import com.ecommerce.common.views.ShoppingCartResponse
 import ShoppingCart._
@@ -16,6 +17,6 @@ object ResponseMappers {
   def mapToShoppingCartView(id: ShoppingCartRef, sc: ShoppingCart): ShoppingCartView =
     ShoppingCartView(id.id, sc.owner.map(_.id), mapToIItemViews(sc.items))
 
-  def mapToIItemViews(items: Map[ItemRef, Int]): List[ShoppingCartItemView] =
+  def mapToIItemViews(items: Map[ProductRef, Int]): List[ShoppingCartItemView] =
     items.map { case (itemRef, count) => ShoppingCartItemView(itemRef.id, count) }.toList
 }

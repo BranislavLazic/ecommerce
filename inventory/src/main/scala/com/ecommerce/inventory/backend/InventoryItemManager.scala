@@ -2,47 +2,47 @@ package com.ecommerce.inventory.backend
 
 import akka.actor.Props
 import akka.persistence.PersistentActor
-import com.ecommerce.inventory.backend.domain.{InventoryItem, Identity}
+import com.ecommerce.common.identity.Identity._
+import com.ecommerce.inventory.backend.domain.{Reservation, Shipment, InventoryItem}
 
 /**
   * Created by lukewyman on 12/18/16.
   */
 object InventoryItemManager {
-  import Identity._
 
   def props = Props(new InventoryItemManager)
 
-  def namei(ir: ItemRef) = ir.id.toString
+  def namei(pr: ProductRef) = pr.id.toString
 
   trait InventoryMessage {
-    def item: ItemRef
+    def item: ProductRef
   }
 
   sealed trait Command extends InventoryMessage
-  case class SetProduct(item: ItemRef) extends Command
-  case class HoldItem(item: ItemRef, shoppingCart: ShoppingCartRef, count: Int) extends Command
-  case class MakeReservation(item: ItemRef, reservation: ReservationRef, count: Int) extends Command
-  case class Checkout(item: ItemRef, shoppingCart: ShoppingCartRef, payment: PaymentRef) extends Command
-  case class AbandonCart(item: ItemRef, shoppingCart: ShoppingCartRef) extends Command
-  case class ReceiveSupply(item: ItemRef, shipment: ShipmentRef) extends Command
-  case class NotifySupply(item: ItemRef, shipment: ShipmentRef) extends Command
+  case class SetProduct(item: ProductRef) extends Command
+  case class HoldItem(item: ProductRef, shoppingCart: ShoppingCartRef, count: Int) extends Command
+  case class MakeReservation(item: ProductRef, reservation: Reservation, count: Int) extends Command
+  case class Checkout(item: ProductRef, shoppingCart: ShoppingCartRef, payment: PaymentRef) extends Command
+  case class AbandonCart(item: ProductRef, shoppingCart: ShoppingCartRef) extends Command
+  case class ReceiveSupply(item: ProductRef, shipment: Shipment) extends Command
+  case class NotifySupply(item: ProductRef, shipment: Shipment) extends Command
 
   sealed trait Event extends InventoryMessage with Serializable
-  case class ProductChanged(item: ItemRef) extends Event
-  case class ItemHeld(item: ItemRef, shoppingCart: ShoppingCartRef, count: Int) extends Event
-  case class ReservationMade(item: ItemRef, reservation: ReservationRef, count: Int) extends Event
-  case class CheckedOut(item: ItemRef, shoppingCart: ShoppingCartRef, payment: PaymentRef) extends Event
-  case class CartAbandoned(item: ItemRef, shoppingCart: ShoppingCartRef, customer: CustomerRef) extends Event
-  case class ShipmentAccepted(item: ItemRef, shipment: ShipmentRef) extends Event
-  case class ShipmentAcknowledged(item: ItemRef, shipment: ShipmentRef) extends Event
+  case class ProductChanged(item: ProductRef) extends Event
+  case class ItemHeld(item: ProductRef, shoppingCart: ShoppingCartRef, count: Int) extends Event
+  case class ReservationMade(item: ProductRef, reservation: Reservation, count: Int) extends Event
+  case class CheckedOut(item: ProductRef, shoppingCart: ShoppingCartRef, payment: PaymentRef) extends Event
+  case class CartAbandoned(item: ProductRef, shoppingCart: ShoppingCartRef, customer: CustomerRef) extends Event
+  case class ShipmentAccepted(item: ProductRef, shipment: Shipment) extends Event
+  case class ShipmentAcknowledged(item: ProductRef, shipment: Shipment) extends Event
 
   case class Rejection(reason: String)
 
   sealed trait Query extends InventoryMessage
-  case class GetItem(item: ItemRef) extends Query
+  case class GetItem(item: ProductRef) extends Query
 
   sealed trait Result extends InventoryMessage
-  case class GetItemResult(item: ItemRef) extends Result
+  case class GetItemResult(item: ProductRef) extends Result
 }
 
 class InventoryItemManager extends PersistentActor {

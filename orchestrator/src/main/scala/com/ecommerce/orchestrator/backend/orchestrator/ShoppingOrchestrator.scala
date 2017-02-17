@@ -8,6 +8,7 @@ import cats.data.EitherT
 import cats.implicits._
 import com.ecommerce.common.clientactors.http._
 import com.ecommerce.common.clientactors.kafka._
+import com.ecommerce.common.identity.Identity.{PaymentRef, ProductRef, CustomerRef, ShoppingCartRef}
 import com.ecommerce.orchestrator.backend.clientapi.{ShoppingCartApi, PaymentApi, InventoryApi}
 
 import scala.concurrent.duration._
@@ -21,11 +22,11 @@ object ShoppingOrchestrator {
 
   def name = "checkout-orchestrator"
 
-  case class StartShopping(shoppingCartId: UUID, customerId: UUID)
-  case class AbandonCart(shoppingCartId: UUID)
-  case class Checkout(shoppingCartId: UUID, creditCard: String)
-  case class PlaceInCart(shoppingCartId: UUID, itemId: UUID, count: Int, backorder: Boolean)
-  case class RemoveFromCart(shoppingCartId: UUID, itemId: UUID)
+  case class StartShopping(shoppingCartId: ShoppingCartRef, customerId: CustomerRef)
+  case class AbandonCart(shoppingCartId: ShoppingCartRef)
+  case class Checkout(shoppingCartId: ShoppingCartRef, creditCard: String)
+  case class PlaceInCart(shoppingCartId: ShoppingCartRef, productId: ProductRef, count: Int, backorder: Boolean)
+  case class RemoveFromCart(shoppingCartId: ShoppingCartRef, productId: ProductRef)
 }
 
 class ShoppingOrchestrator extends Actor with ActorLogging
@@ -59,8 +60,8 @@ class ShoppingOrchestrator extends Actor with ActorLogging
       kill()
     case AbandonCart(scid) =>
       val scf = EitherT(getShoppingCart(scid))
-      scf.map(sc => sc.items.foreach(i => releaseInventory(scid, i.itemId)))
-      scf.flatMapF(sc => clearShoppingCart(sc.shoppingCartId)).value.pipeTo(sender())
+      scf.map(sc => sc.items.foreach(i => releaseInventory(scid, ProductRef(i.productId))))
+      scf.flatMapF(sc => clearShoppingCart(ShoppingCartRef(sc.shoppingCartId))).value.pipeTo(sender())
       kill()
     case Checkout(scid, cc) =>
       /* what should happen here is that an Order should be created, and the Order with it's OrderStatus
@@ -69,7 +70,7 @@ class ShoppingOrchestrator extends Actor with ActorLogging
       val result = for {
         sc <- EitherT(getShoppingCart(scid))
         p <- EitherT(pay(cc))
-        cs = sc.items.map(i => claimInventory(sc.shoppingCartId, i.itemId, p.paymentId))
+        cs = sc.items.map(i => claimInventory(ShoppingCartRef(sc.shoppingCartId), ProductRef(i.productId), PaymentRef(p.paymentId)))
       } yield sc
       result.value.pipeTo(sender())
       kill()

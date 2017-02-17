@@ -7,6 +7,7 @@ import akka.actor.ActorRef
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
+import com.ecommerce.common.identity.Identity.{ProductRef, ShipmentRef}
 import com.ecommerce.common.views.ReceivingResponse
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,15 +27,15 @@ trait ReceivingApi {
 
   def receivingClient: ActorRef
 
-  def getShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] =
+  def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
 
-  def createShipment(productId: UUID, ordered: ZonedDateTime, count: Int): Future[HttpClientResult[ShipmentView]] =
+  def createShipment(productId: ProductRef, ordered: ZonedDateTime, count: Int): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(CreateShipment(productId, ordered, count)).mapTo[HttpClientResult[ShipmentView]]
 
-  def acknowledgeShipment(shipmentId: UUID, expectedDelivery: ZonedDateTime): Future[HttpClientResult[ShipmentView]] =
+  def acknowledgeShipment(shipmentId: ShipmentRef, expectedDelivery: ZonedDateTime): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(AcknowledgeShipment(shipmentId, expectedDelivery)).mapTo[HttpClientResult[ShipmentView]]
 
-  def acceptShipment(shipmentId: UUID): Future[HttpClientResult[ShipmentView]] =
+  def acceptShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(AcceptShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
 }

@@ -3,8 +3,8 @@ package com.ecommerce.inventory.backend.domain
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import com.ecommerce.inventory.backend.InventoryItemManager.{ShipmentAccepted, CheckedOut, ItemHeld, ProductChanged}
-import com.ecommerce.inventory.backend.domain.Identity.{ShipmentRef, ShoppingCartRef, ItemRef}
+import com.ecommerce.common.identity.Identity.ProductRef
+import com.ecommerce.inventory.backend.InventoryItemManager.ProductChanged
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -13,22 +13,22 @@ import org.scalatest.{FlatSpec, Matchers}
 class InventoryItemSpec extends FlatSpec with Matchers {
 
   "An InventoryItem" should "set the product when new" in {
-    val product = ItemRef(UUID.randomUUID)
+    val product = ProductRef(UUID.randomUUID)
     val item = InventoryItem.empty.setProduct(product)
 
     item.product.fold(fail("InventoryItem doesn't specify a product"))(_ should be theSameInstanceAs product)
   }
 
   it should "not allow the product to be set if there already is a product" in {
-    val product = ItemRef(UUID.randomUUID)
+    val product = ProductRef(UUID.randomUUID)
     val item = InventoryItem.empty.setProduct(product)
 
-    val otherProduct = ItemRef(UUID.randomUUID)
+    val otherProduct = ProductRef(UUID.randomUUID)
     an [IllegalArgumentException] should be thrownBy item.setProduct(otherProduct)
   }
 
   it should "apply the ProductChanged event" in {
-    val product = ItemRef(UUID.randomUUID())
+    val product = ProductRef(UUID.randomUUID())
     val item = InventoryItem.empty.applyEvent(ProductChanged(product))
 
     item.product.fold(fail("InventoryItem doesn't specify a product"))(_ should be theSameInstanceAs product)
@@ -51,7 +51,7 @@ class InventoryItemSpec extends FlatSpec with Matchers {
   }
 
   it should "apply events for checking out" in {
-    val product = ItemRef(UUID.randomUUID)
+    val product = ProductRef(UUID.randomUUID)
     val item = InventoryItem.empty.setProduct(product)
   }
 

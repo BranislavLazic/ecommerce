@@ -6,7 +6,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import akka.http.scaladsl.server.{Route, Directives}
 import akka.http.scaladsl.model.StatusCodes
-import com.ecommerce.shoppingcart.backend.ShoppingCart.{ItemRef, CustomerRef, ShoppingCartRef}
+import com.ecommerce.common.identity.Identity
 import com.ecommerce.shoppingcart.backend._
 import com.ecommerce.common.views.ShoppingCartRequest
 import de.heikoseeberger.akkahttpcirce.CirceSupport
@@ -29,6 +29,7 @@ trait ShoppingCartRoutes {
   import io.circe.generic.auto._
   import ShoppingCartRequest._
   import ResponseMappers._
+  import Identity._
 
   def shoppingCarts: ActorRef
 
@@ -58,7 +59,7 @@ trait ShoppingCartRoutes {
       pathPrefix("shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
           entity(as[AddItemView]) { aiv =>
-            val addItem = AddItem(ShoppingCartRef(shoppingCartId), ItemRef(productId), aiv.count)
+            val addItem = AddItem(ShoppingCartRef(shoppingCartId), ProductRef(productId), aiv.count)
             getRoute(addItem)
           }
         }
@@ -70,7 +71,7 @@ trait ShoppingCartRoutes {
     delete {
       pathPrefix("shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
-          val removeItem = RemoveItem(ShoppingCartRef(shoppingCartId), ItemRef(productId))
+          val removeItem = RemoveItem(ShoppingCartRef(shoppingCartId), ProductRef(productId))
           getRoute(removeItem)
         }
       }

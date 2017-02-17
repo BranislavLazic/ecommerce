@@ -10,11 +10,12 @@ import akka.http.scaladsl.model.StatusCodes._
 import com.ecommerce.inventory.backend.InventoryItemManager._
 import com.ecommerce.common.views.InventoryRequest
 import com.ecommerce.common.views.PaymentRequest
+import com.ecommerce.common.identity.Identity._
+import com.ecommerce.inventory.backend.domain.{Reservation, Shipment}
 
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import scala.concurrent.ExecutionContext
 import scala.util.Try
-import com.ecommerce.inventory.backend.domain.Identity._
 
 /**
   * Created by lukewyman on 12/18/16.
@@ -51,7 +52,7 @@ trait InventoryRoutes {
       pathPrefix("items") {
         pathEndOrSingleSlash {
           entity(as[CreateItemView]) { civ =>
-            val setProduct = SetProduct(ItemRef(civ.itemId))
+            val setProduct = SetProduct(ProductRef(civ.productId))
             inventoryItems ! setProduct
             complete(OK)
           }
@@ -62,9 +63,9 @@ trait InventoryRoutes {
 
   def getItem: Route = {
     get {
-      pathPrefix("items" / ItemId) { itemId =>
+      pathPrefix("items" / ProductId) { productId =>
         pathEndOrSingleSlash {
-          onSuccess(inventoryItems.ask(GetItem(ItemRef(itemId))).mapTo[GetItemResult]) {
+          onSuccess(inventoryItems.ask(GetItem(ProductRef(productId))).mapTo[GetItemResult]) {
             case result => complete(mapToInventoryItem(result))
           }
         }
@@ -74,10 +75,11 @@ trait InventoryRoutes {
 
   def receiveSupply: Route = {
     post {
-      pathPrefix("items" / ItemId / "shipments") { itemId =>
+      pathPrefix("items" / ProductId / "shipments") { productId =>
         pathEndOrSingleSlash {
           entity(as[ReceiveSupplyView]) { asv =>
-            val supply = ReceiveSupply(ItemRef(itemId), ShipmentRef(asv.shipmentId, asv.date, asv.count))
+            val supply = ReceiveSupply(ProductRef(productId),
+              Shipment(ShipmentRef(asv.shipmentId), asv.expectedDelivery,  asv.delivered, asv.count))
             inventoryItems ! supply
             complete(OK)
           }
@@ -88,11 +90,11 @@ trait InventoryRoutes {
 
   def notifySupply: Route = {
     post {
-      pathPrefix("items" / ItemId / "acknowledgements") { itemId =>
+      pathPrefix("items" / ProductId / "acknowledgements") { productId =>
         pathEndOrSingleSlash {
           entity(as[NotifySupplyView]) { asv =>
-            val notification =
-              NotifySupply(ItemRef(itemId), ShipmentRef(asv.shipmentId, asv.expectedDate, asv.count))
+            val notification = NotifySupply(ProductRef(productId),
+              Shipment(ShipmentRef(asv.shipmentId), asv.expectedDelivery, null.asInstanceOf[ZonedDateTime], asv.count))
             inventoryItems ! notification
             complete(OK)
           }
@@ -103,10 +105,10 @@ trait InventoryRoutes {
 
   def holdItem: Route = {
     post {
-      pathPrefix("items" / ItemId / "shoppingcarts" / ShoppingCartId) { (itemId, shoppingCartId) =>
+      pathPrefix("items" / ProductId / "shoppingcarts" / ShoppingCartId) { (productId, shoppingCartId) =>
         pathEndOrSingleSlash {
           entity(as[HoldItemView]) { hold =>
-            val holdItem = HoldItem(ItemRef(itemId), ShoppingCartRef(shoppingCartId), hold.count)
+            val holdItem = HoldItem(ProductRef(productId), ShoppingCartRef(shoppingCartId), hold.count)
             inventoryItems ! holdItem
             complete(OK)
           }
@@ -117,10 +119,10 @@ trait InventoryRoutes {
 
   def reserveItem: Route = {
     post {
-      pathPrefix("items" / ItemId / "customers" / CustomerId) { (itemId, customerId) =>
+      pathPrefix("items" / ProductId / "customers" / CustomerId) { (productId, customerId) =>
         entity(as[ReserveItemView]) { riv =>
-          val makeReservation = MakeReservation(ItemRef(itemId),
-            ReservationRef(CustomerRef(customerId), ShipmentRef(riv.shipmentId, ZonedDateTime.now, 0)), riv.count)
+          val makeReservation = MakeReservation(ProductRef(productId),
+            Reservation(CustomerRef(customerId), Shipment(ShipmentRef(riv.shipmentId), riv.expectedDelivery, null, riv.count)), riv.count)
           inventoryItems ! makeReservation
           complete(OK)
         }
@@ -130,9 +132,9 @@ trait InventoryRoutes {
 
   def abandonCart: Route = {
     delete {
-      pathPrefix("items" / ItemId / "shoppingcarts" / ShoppingCartId) { (itemId, shoppingCartId) =>
+      pathPrefix("items" / ProductId / "shoppingcarts" / ShoppingCartId) { (productId, shoppingCartId) =>
         pathEndOrSingleSlash {
-          val release = AbandonCart(ItemRef(itemId), ShoppingCartRef(shoppingCartId))
+          val release = AbandonCart(ProductRef(productId), ShoppingCartRef(shoppingCartId))
           inventoryItems ! release
           complete(OK)
         }
@@ -142,10 +144,10 @@ trait InventoryRoutes {
 
   def checkout: Route = {
     post {
-      pathPrefix("items" / ItemId / "shoppingcarts" / ShoppingCartId / "payments") { (itemId, shoppingCartId) =>
+      pathPrefix("items" / ProductId / "shoppingcarts" / ShoppingCartId / "payments") { (productId, shoppingCartId) =>
         pathEndOrSingleSlash {
           entity(as[PaymentView]) { pv =>
-            val checkout = Checkout(ItemRef(itemId), ShoppingCartRef(shoppingCartId), PaymentRef(pv.paymentId))
+            val checkout = Checkout(ProductRef(productId), ShoppingCartRef(shoppingCartId), PaymentRef(pv.paymentId))
             inventoryItems ! checkout
             complete(OK)
           }
@@ -155,7 +157,7 @@ trait InventoryRoutes {
   }
 
   val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
-  val ItemId = IdSegment
+  val ProductId = IdSegment
   val ShoppingCartId = IdSegment
   val CustomerId = IdSegment
 }

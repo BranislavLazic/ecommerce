@@ -11,7 +11,9 @@ import cats.implicits._
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientError
 import com.ecommerce.common.clientactors.http._
 import com.ecommerce.common.clientactors.kafka.InventoryKafkaClient
+import com.ecommerce.common.identity.Identity.{ProductRef, ShipmentRef}
 import com.ecommerce.orchestrator.backend.Mappers
+import com.ecommerce.orchestrator.backend.ResponseViews.ReceivingSummaryView
 import com.ecommerce.orchestrator.backend.clientapi.{ReceivingApi, InventoryApi}
 
 import scala.concurrent.Future
@@ -26,10 +28,10 @@ object ReceivingOrchestrator {
 
   val name = "receiving-orchestrator"
 
-  case class GetShipmentSummary(shipmentId: UUID)
-  case class RequestShipment(productId: UUID, ordered: ZonedDateTime, count: Int)
-  case class AcknowledgeShipment(itemId: UUID, shipmentId: UUID, expectedDelivery: ZonedDateTime, count: Int)
-  case class AcceptShipment(itemId: UUID, shipmentId: UUID, delivered: ZonedDateTime, count: Int)
+  case class GetShipmentSummary(shipmentId: ShipmentRef)
+  case class RequestShipment(productId: ProductRef, ordered: ZonedDateTime, count: Int)
+  case class AcknowledgeShipment(productId: ProductRef, shipmentId: ShipmentRef, expectedDelivery: ZonedDateTime, count: Int)
+  case class AcceptShipment(productId: ProductRef, shipmentId: ShipmentRef, delivered: ZonedDateTime, count: Int)
 }
 
 class ReceivingOrchestrator extends Actor with ActorLogging
@@ -48,12 +50,16 @@ class ReceivingOrchestrator extends Actor with ActorLogging
 
   def receive = {
     case GetShipmentSummary(sid) =>
-      val result = for {
+      // Need Monads for control flow here, since getInventoryItem depends on the productId
+      // retreived from getShipment
+      val result: EitherT[Future, HttpClientError, ReceivingSummaryView] = for {
         gs <- EitherT(getShipment(sid))
-        gi <- EitherT(getInventoryItem(gs.productId))
+        gi <- EitherT(getInventoryItem(ProductRef(gs.productId)))
       } yield mapToReceivingSummaryView(gs, gi)
       result.value.pipeTo(sender())
       kill()
+      // The rest of these cases can use Applicative.map2, because the results are just being combined -
+      // no control flow needed here.
     case RequestShipment(pid, o, c) =>
       val cs = EitherT(createShipment(pid, o, c))
       val gi = EitherT(getInventoryItem(pid))
@@ -74,5 +80,5 @@ class ReceivingOrchestrator extends Actor with ActorLogging
       kill()
   }
 
-  def kill() = log.info("should kill children and self here!") // TODO: implementation to kill http cleint actors and self
+  def kill() = log.info("should kill children and self here!") // TODO: implementation to stop http cleint actors and self
 }

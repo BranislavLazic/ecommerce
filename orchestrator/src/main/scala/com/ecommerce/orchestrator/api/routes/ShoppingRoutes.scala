@@ -7,6 +7,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, _}
 import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
+import com.ecommerce.common.identity.Identity.{ProductRef, CustomerRef, ShoppingCartRef}
 import com.ecommerce.common.views.ShoppingCartRequest.AddItemView
 import com.ecommerce.common.views.ShoppingCartResponse.ShoppingCartView
 import com.ecommerce.orchestrator.backend.RequestViews
@@ -49,7 +50,7 @@ trait ShoppingRoutes {
       pathPrefix("shop" / "customers" / CustomerId/ "shoppingcarts") { customerId =>
         pathEndOrSingleSlash {
           val orchestrator = system.actorOf(ShoppingOrchestrator.props, ShoppingOrchestrator.name)
-          val ss = StartShopping(UUID.randomUUID(), customerId)
+          val ss = StartShopping(ShoppingCartRef(UUID.randomUUID()), CustomerRef(customerId))
           onSuccess(orchestrator.ask(ss).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
             result.fold(complete(BadRequest, _), complete(OK, _))
           }
@@ -64,7 +65,7 @@ trait ShoppingRoutes {
         pathEndOrSingleSlash {
           entity(as[AddItemView]) { aiv =>
             val orchestrator = system.actorOf(ShoppingOrchestrator.props, ShoppingOrchestrator.name)
-            val pic = PlaceInCart(shoppingCartId, productId, aiv.count, aiv.backorder)
+            val pic = PlaceInCart(ShoppingCartRef(shoppingCartId), ProductRef(productId), aiv.count, aiv.backorder)
             onSuccess(orchestrator.ask(pic).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
               result.fold(complete(BadRequest, _), complete(OK, _))
             }
@@ -79,7 +80,7 @@ trait ShoppingRoutes {
       pathPrefix("shop" / "shoppingcarts" / ShoppingCartId / "items" / ProductId) { (shoppingCartId, productId) =>
         pathEndOrSingleSlash {
           val orchestrator = system.actorOf(ShoppingOrchestrator.props, ShoppingOrchestrator.name)
-          val rfc = RemoveFromCart(shoppingCartId, productId)
+          val rfc = RemoveFromCart(ShoppingCartRef(shoppingCartId), ProductRef(productId))
           onSuccess(orchestrator.ask(rfc).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
             result.fold(complete(BadRequest, _), complete(OK, _))
           }
@@ -93,7 +94,7 @@ trait ShoppingRoutes {
       pathPrefix("shop" / "shoppingcarts" / ShoppingCartId ) { shoppingCartId  =>
         pathEndOrSingleSlash {
           val orchestrator = system.actorOf(ShoppingOrchestrator.props, ShoppingOrchestrator.name)
-          val ac = AbandonCart(shoppingCartId)
+          val ac = AbandonCart(ShoppingCartRef(shoppingCartId))
           onSuccess(orchestrator.ask(ac).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
             result.fold(complete(BadRequest, _), complete(OK, _))
           }
@@ -109,7 +110,7 @@ trait ShoppingRoutes {
         pathEndOrSingleSlash {
           entity(as[CheckoutView]) { cv =>
             val orchestrator = system.actorOf(ShoppingOrchestrator.props, ShoppingOrchestrator.name)
-            val co = Checkout(shoppingCartId, cv.creditCard)
+            val co = Checkout(ShoppingCartRef(shoppingCartId), cv.creditCard)
             onSuccess(orchestrator.ask(co).mapTo[HttpClientResult[ShoppingCartView]]) { result =>
               result.fold(complete(BadRequest, _), complete(OK, _))
             }

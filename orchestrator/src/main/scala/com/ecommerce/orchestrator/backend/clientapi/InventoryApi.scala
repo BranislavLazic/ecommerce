@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
 import com.ecommerce.common.views.{InventoryRequest, InventoryResponse}
+import com.ecommerce.common.identity.Identity
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,6 +20,7 @@ trait InventoryApi {
   import InventoryProtocol._
   import InventoryRequest._
   import InventoryResponse._
+  import Identity._
   import akka.pattern.ask
 
   implicit def executionContext: ExecutionContext
@@ -27,21 +29,22 @@ trait InventoryApi {
   def inventoryClient: ActorRef
   def inventoryQueue: ActorRef
 
-  def getInventoryItem(itemId: UUID): Future[HttpClientResult[InventoryItemView]] =
-    inventoryClient.ask(GetItem(itemId)).mapTo[HttpClientResult[InventoryItemView]]
+  def getInventoryItem(productID: ProductRef): Future[HttpClientResult[InventoryItemView]] =
+    inventoryClient.ask(GetItem(productID)).mapTo[HttpClientResult[InventoryItemView]]
 
-  def notifySupply(itemId: UUID, shipmentId: UUID, expectedDelivery: ZonedDateTime, count: Int): Future[HttpClientResult[InventoryItemView]] =
-    inventoryClient.ask(NotifySupply(itemId, shipmentId, expectedDelivery, count)).mapTo[HttpClientResult[InventoryItemView]]
+  def notifySupply(productId: ProductRef, shipmentId: ShipmentRef,
+                   expectedDelivery: ZonedDateTime, count: Int): Future[HttpClientResult[InventoryItemView]] =
+    inventoryClient.ask(NotifySupply(productId, shipmentId, expectedDelivery, count)).mapTo[HttpClientResult[InventoryItemView]]
 
-  def receiveSupply(itemId: UUID, shipmentId: UUID, delivered: ZonedDateTime, count: Int): Future[HttpClientResult[InventoryItemView]] =
-    inventoryClient.ask(ReceiveSupply(itemId,shipmentId, delivered, count)).mapTo[HttpClientResult[InventoryItemView]]
+  def receiveSupply(productId: ProductRef, shipmentId: ShipmentRef, delivered: ZonedDateTime, count: Int): Future[HttpClientResult[InventoryItemView]] =
+    inventoryClient.ask(ReceiveSupply(productId,shipmentId, delivered, count)).mapTo[HttpClientResult[InventoryItemView]]
 
-  def releaseInventory(shoppingCartId: UUID, itemId: UUID) =
-    inventoryQueue ! ReleaseItem(itemId, shoppingCartId)
+  def releaseInventory(shoppingCartId: ShoppingCartRef, productId: ProductRef) =
+    inventoryQueue ! ReleaseItem(productId, shoppingCartId)
 
-  def holdInventory(shoppingCartId: UUID, itemId: UUID, count: Int): Future[HttpClientResult[HoldItemView]] =
-    inventoryClient.ask(HoldItem(shoppingCartId, itemId, count)).mapTo[HttpClientResult[HoldItemView]]
+  def holdInventory(shoppingCartId: ShoppingCartRef, productId: ProductRef, count: Int): Future[HttpClientResult[HoldItemView]] =
+    inventoryClient.ask(HoldItem(productId, shoppingCartId, count)).mapTo[HttpClientResult[HoldItemView]]
 
-  def claimInventory(shoppingCartId: UUID, itemId: UUID, paymentId: UUID): Future[HttpClientResult[ClaimItemView]] =
-    inventoryQueue.ask(ClaimItem(shoppingCartId, itemId, paymentId)).mapTo[HttpClientResult[ClaimItemView]]
+  def claimInventory(shoppingCartId: ShoppingCartRef, productId: ProductRef, paymentId: PaymentRef): Future[HttpClientResult[ClaimItemView]] =
+    inventoryQueue.ask(ClaimItem(productId, shoppingCartId, paymentId)).mapTo[HttpClientResult[ClaimItemView]]
 }

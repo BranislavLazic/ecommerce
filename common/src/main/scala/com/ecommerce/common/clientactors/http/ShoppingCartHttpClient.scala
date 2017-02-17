@@ -4,6 +4,7 @@ import java.util.UUID
 import com.ecommerce.common.views.ShoppingCartRequest
 import com.ecommerce.common.views.ShoppingCartResponse
 import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
+import com.ecommerce.common.identity.Identity
 import scala.concurrent.Future
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.http.scaladsl.model.Uri.Path
@@ -32,9 +33,9 @@ class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHt
     case GetShoppingCart(id) =>
       getShoppingCart(id).pipeTo(sender())
     case CreateShoppingCart(scid, cid) =>
-      createShoppingCart(CreateShoppingCartView(scid, cid)).pipeTo(sender())
-    case AddItem(scid, iid, c) =>
-      addItem(scid, iid, AddItemView(c, false)).pipeTo(sender())
+      createShoppingCart(CreateShoppingCartView(scid.id, cid.id)).pipeTo(sender())
+    case AddItem(scid, pid, c) =>
+      addItem(scid, pid, AddItemView(c, false)).pipeTo(sender())
   }
 
 }
@@ -46,8 +47,9 @@ trait ShoppingCartHttpClientApi extends HttpClient {
   import ShoppingCartRequest._
   import ShoppingCartResponse._
   import HttpClient._
+  import Identity._
 
-  def getShoppingCart(shoppingCartId: UUID): Future[HttpClientResult[ShoppingCartView]] = {
+  def getShoppingCart(shoppingCartId: ShoppingCartRef): Future[HttpClientResult[ShoppingCartView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.GET,
       uri = Uri(path = Path(s"/shoppingcarts/${shoppingCartId}"))))
@@ -68,11 +70,11 @@ trait ShoppingCartHttpClientApi extends HttpClient {
     source.via(flow).runWith(Sink.head)
   }
 
-  def addItem(shoppingCartId: UUID, itemId: UUID, aiv: AddItemView): Future[HttpClientResult[ShoppingCartView]] = {
+  def addItem(shoppingCartId: ShoppingCartRef, productId: ProductRef, aiv: AddItemView): Future[HttpClientResult[ShoppingCartView]] = {
 
     val source = Source.single(HttpRequest(method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, aiv.asJson.toString()),
-      uri = Uri(path = Path(s"/shoppingcarts/${shoppingCartId}/items/${itemId}"))))
+      uri = Uri(path = Path(s"/shoppingcarts/${shoppingCartId}/items/${productId}"))))
     val flow = http.outgoingConnection(host = "localhost", port = 8000).mapAsync(1) { r =>
       deserialize[ShoppingCartView](r)
     }

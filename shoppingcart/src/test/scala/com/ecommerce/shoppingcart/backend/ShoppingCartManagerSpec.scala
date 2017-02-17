@@ -3,7 +3,7 @@ package com.ecommerce.shoppingcart.backend
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import com.ecommerce.shoppingcart.backend.ShoppingCart.{ItemRef, CustomerRef, ShoppingCartRef}
+import com.ecommerce.common.identity.Identity._
 
 /**
   * Created by lukewyman on 1/24/17.
@@ -14,8 +14,8 @@ class ShoppingCartManagerSpec extends PersistenceSpec(ActorSystem("test")) with 
     "place items in the ShoppingCart and then view the ShoppingCart" in {
       val shoppingCartId = ShoppingCartRef(UUID.randomUUID)
       val customerId = CustomerRef(UUID.randomUUID)
-      val item1 = ItemRef(UUID.randomUUID())
-      val item2 = ItemRef(UUID.randomUUID())
+      val item1 = ProductRef(UUID.randomUUID())
+      val item2 = ProductRef(UUID.randomUUID())
       val shoppingCartManager = system.actorOf(ShoppingCartManager.props, ShoppingCartManager.name(shoppingCartId))
 
       shoppingCartManager ! SetOwner(shoppingCartId, customerId)
