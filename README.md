@@ -10,8 +10,6 @@ I'm open to the criticism that this project is a little too ambitious for a sing
 * Scala
 * [cats](https://github.com/typelevel/cats)
 * Akka
-··* Persistence (C* backed)
-··* Clustering
 * Akka HTTP
 * REST
 * Kafka
