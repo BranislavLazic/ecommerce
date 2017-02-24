@@ -2,9 +2,9 @@ package com.ecommerce.orchestrator.backend.clientapi
 
 import java.util.UUID
 
-import akka.actor.ActorRef
+import akka.actor.{Actor, ActorRef}
 import akka.util.Timeout
-import com.ecommerce.common.clientactors.http.HttpClient
+import com.ecommerce.common.clientactors.http.{ShoppingCartHttpClient, HttpClient}
 import com.ecommerce.common.clientactors.protocols.ShoppingCartProtocol
 import com.ecommerce.common.identity.Identity.{ProductRef, ShoppingCartRef, CustomerRef}
 import com.ecommerce.common.views.{ShoppingCartRequest, ShoppingCartResponse}
@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by lukewyman on 2/8/17.
   */
-trait ShoppingCartApi {
+trait ShoppingCartApi { this: Actor =>
   import HttpClient._
   import ShoppingCartProtocol._
   import ShoppingCartRequest._
@@ -24,7 +24,7 @@ trait ShoppingCartApi {
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  def shoppingCartClient: ActorRef
+  def shoppingCartClient = context.actorOf(ShoppingCartHttpClient.props, ShoppingCartHttpClient.name)
 
   def createShoppingCart(shoppingCartId: ShoppingCartRef, customerId: CustomerRef): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(CreateShoppingCart(shoppingCartId, customerId)).mapTo[HttpClientResult[ShoppingCartView]]

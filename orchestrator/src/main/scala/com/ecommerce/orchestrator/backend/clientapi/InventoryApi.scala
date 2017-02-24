@@ -3,9 +3,10 @@ package com.ecommerce.orchestrator.backend.clientapi
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import akka.actor.ActorRef
+import akka.actor.{Actor, ActorRef}
 import akka.util.Timeout
-import com.ecommerce.common.clientactors.http.HttpClient
+import com.ecommerce.common.clientactors.http.{InventoryHttpClient, HttpClient}
+import com.ecommerce.common.clientactors.kafka.InventoryKafkaClient
 import com.ecommerce.common.clientactors.protocols.InventoryProtocol
 import com.ecommerce.common.views.{InventoryRequest, InventoryResponse}
 import com.ecommerce.common.identity.Identity
@@ -15,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by lukewyman on 2/8/17.
   */
-trait InventoryApi {
+trait InventoryApi { this: Actor =>
   import HttpClient._
   import InventoryProtocol._
   import InventoryRequest._
@@ -26,8 +27,8 @@ trait InventoryApi {
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  def inventoryClient: ActorRef
-  def inventoryQueue: ActorRef
+  def inventoryClient = context.actorOf(InventoryHttpClient.props, InventoryHttpClient.name)
+  def inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
 
   def getInventoryItem(productID: ProductRef): Future[HttpClientResult[InventoryItemView]] =
     inventoryClient.ask(GetItem(productID)).mapTo[HttpClientResult[InventoryItemView]]

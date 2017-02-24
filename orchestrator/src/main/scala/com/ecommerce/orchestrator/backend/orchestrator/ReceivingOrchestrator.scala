@@ -9,8 +9,6 @@ import cats.Applicative
 import cats.data.EitherT
 import cats.implicits._
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientError
-import com.ecommerce.common.clientactors.http._
-import com.ecommerce.common.clientactors.kafka.InventoryKafkaClient
 import com.ecommerce.common.identity.Identity.{ProductRef, ShipmentRef}
 import com.ecommerce.orchestrator.backend.Mappers
 import com.ecommerce.orchestrator.backend.ResponseViews.ReceivingSummaryView
@@ -44,10 +42,6 @@ class ReceivingOrchestrator extends Actor with ActorLogging
   implicit def executionContext = context.dispatcher
   implicit def timeout: Timeout = Timeout(3 seconds)
 
-  val receivingClient = context.actorOf(ReceivingHttpClient.props, ReceivingHttpClient.name)
-  val inventoryClient = context.actorOf(InventoryHttpClient.props, InventoryHttpClient.name)
-  val inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
-
   def receive = {
     case GetShipmentSummary(sid) =>
       // Need Monads for control flow here, since getInventoryItem depends on the productId
@@ -80,5 +74,5 @@ class ReceivingOrchestrator extends Actor with ActorLogging
       kill()
   }
 
-  def kill() = log.info("should kill children and self here!") // TODO: implementation to stop http cleint actors and self
+  def kill() = log.info("stopping children and self after processing message") // TODO: implementation to stop http cleint actors and self
 }

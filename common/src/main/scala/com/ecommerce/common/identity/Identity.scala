@@ -10,6 +10,8 @@ object Identity {
 
   sealed trait Id
 
+  case class CategoryRef(id: UUID) extends Id
+
   case class CustomerRef(id: UUID) extends Id
 
   case class PaymentRef(id: UUID) extends Id

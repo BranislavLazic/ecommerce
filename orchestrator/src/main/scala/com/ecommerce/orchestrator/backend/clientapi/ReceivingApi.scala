@@ -3,9 +3,9 @@ package com.ecommerce.orchestrator.backend.clientapi
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import akka.actor.ActorRef
+import akka.actor.{Actor, ActorRef}
 import akka.util.Timeout
-import com.ecommerce.common.clientactors.http.HttpClient
+import com.ecommerce.common.clientactors.http.{ReceivingHttpClient, HttpClient}
 import com.ecommerce.common.clientactors.protocols.ReceivingProtocol
 import com.ecommerce.common.identity.Identity.{ProductRef, ShipmentRef}
 import com.ecommerce.common.views.ReceivingResponse
@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by lukewyman on 2/8/17.
   */
-trait ReceivingApi {
+trait ReceivingApi { this: Actor =>
 
   import HttpClient._
   import ReceivingProtocol._
@@ -25,7 +25,7 @@ trait ReceivingApi {
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  def receivingClient: ActorRef
+  val receivingClient = context.actorOf(ReceivingHttpClient.props, ReceivingHttpClient.name)
 
   def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]

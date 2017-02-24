@@ -39,11 +39,6 @@ class ShoppingOrchestrator extends Actor with ActorLogging
   implicit def executionContext = context.dispatcher
   implicit def timeout: Timeout = Timeout(3 seconds)
 
-  def inventoryClient = context.actorOf(InventoryHttpClient.props, InventoryHttpClient.name)
-  def inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
-  def paymentClient = context.actorOf(PaymentHttpClient.props, PaymentHttpClient.name)
-  def shoppingCartClient = context.actorOf(ShoppingCartHttpClient.props, ShoppingCartHttpClient.name)
-
   def receive = {
     case StartShopping(scid, cid) =>
       createShoppingCart(scid, cid).pipeTo(sender())
@@ -76,5 +71,5 @@ class ShoppingOrchestrator extends Actor with ActorLogging
       kill()
   }
 
-  def kill() = log.info("killing children and self after processing message") // TODO: implementation to kill http cleint actors and self
+  def kill() = log.info("stopping children and self after processing message") // TODO: implementation to kill http cleint actors and self
 }
