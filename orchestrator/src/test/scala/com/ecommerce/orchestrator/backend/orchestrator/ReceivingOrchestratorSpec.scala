@@ -5,6 +5,7 @@ import java.util.UUID
 
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.testkit.{TestProbe, DefaultTimeout, ImplicitSender, TestKit}
+import com.ecommerce.common.identity.Identity
 import com.ecommerce.common.views.InventoryResponse
 import com.ecommerce.common.views.ReceivingResponse
 import com.ecommerce.orchestrator.backend.ResponseViews
@@ -29,6 +30,7 @@ class ReceivingOrchestratorSpec extends TestKit(ActorSystem("test-receiving-orch
   import ReceivingResponse._
   import InventoryResponse._
   import ResponseViews._
+  import Identity._
 
   "The ReceivingOrchestrator" must {
 
@@ -44,10 +46,10 @@ class ReceivingOrchestratorSpec extends TestKit(ActorSystem("test-receiving-orch
       val delivered = null.asInstanceOf[ZonedDateTime]
       val count = 100
 
-      receivingOrchestrator ! GetShipmentSummary(shipmentId)
-      receivingClientProbe.expectMsg(GetShipment(shipmentId))
+      receivingOrchestrator ! GetShipmentSummary(ShipmentRef(shipmentId))
+      receivingClientProbe.expectMsg(GetShipment(ShipmentRef(shipmentId)))
       receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId,  ordered, expectedDelivery, delivered, count)))
-      inventoryClientProbe.expectMsg(GetItem(productId))
+      inventoryClientProbe.expectMsg(GetItem(ProductRef(productId)))
       inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
       inventoryQueueProbe.expectNoMsg()
 
@@ -74,10 +76,10 @@ class ReceivingOrchestratorSpec extends TestKit(ActorSystem("test-receiving-orch
      val expectedDelivery = null.asInstanceOf[ZonedDateTime]
      val delivered = null.asInstanceOf[ZonedDateTime]
 
-     receivingOrchestrator ! RequestShipment(productId, ordered, count)
-     receivingClientProbe.expectMsg(CreateShipment(productId, ordered, count))
+     receivingOrchestrator ! RequestShipment(ProductRef(productId), ordered, count)
+     receivingClientProbe.expectMsg(CreateShipment(ProductRef(productId), ordered, count))
      receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId, ordered, expectedDelivery, delivered, count)))
-     inventoryClientProbe.expectMsg(GetItem(productId))
+     inventoryClientProbe.expectMsg(GetItem(ProductRef(productId)))
      inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
      inventoryQueueProbe.expectNoMsg()
 
@@ -105,10 +107,10 @@ class ReceivingOrchestratorSpec extends TestKit(ActorSystem("test-receiving-orch
     val expectedDelivery = ZonedDateTime.now
     val delivered = null.asInstanceOf[ZonedDateTime]
 
-    receivingOrchestrator ! ReceivingOrchestrator.AcknowledgeShipment(productId, shipmentId, expectedDelivery, count)
-    receivingClientProbe.expectMsg(ReceivingProtocol.AcknowledgeShipment(shipmentId, expectedDelivery))
+    receivingOrchestrator ! ReceivingOrchestrator.AcknowledgeShipment(ProductRef(productId), ShipmentRef(shipmentId), expectedDelivery, count)
+    receivingClientProbe.expectMsg(ReceivingProtocol.AcknowledgeShipment(ShipmentRef(shipmentId), expectedDelivery))
     receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId, ordered, expectedDelivery, delivered, count)))
-    inventoryClientProbe.expectMsg(NotifySupply(productId, shipmentId, expectedDelivery, count))
+    inventoryClientProbe.expectMsg(NotifySupply(ProductRef(productId), ShipmentRef(shipmentId), expectedDelivery, count))
     inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
     inventoryQueueProbe.expectNoMsg()
 
@@ -135,10 +137,10 @@ class ReceivingOrchestratorSpec extends TestKit(ActorSystem("test-receiving-orch
     val expectedDelivery = ZonedDateTime.now.plusDays(-10)
     val delivered = ZonedDateTime.now
 
-    receivingOrchestrator ! ReceivingOrchestrator.AcceptShipment(productId, shipmentId, delivered, count)
-    receivingClientProbe.expectMsg(ReceivingProtocol.AcceptShipment(shipmentId))
+    receivingOrchestrator ! ReceivingOrchestrator.AcceptShipment(ProductRef(productId), ShipmentRef(shipmentId), delivered, count)
+    receivingClientProbe.expectMsg(ReceivingProtocol.AcceptShipment(ShipmentRef(shipmentId)))
     receivingClientProbe.reply(Right(ShipmentView(shipmentId, productId, ordered, expectedDelivery, delivered, count)))
-    inventoryClientProbe.expectMsg(ReceiveSupply(productId, shipmentId, delivered, count))
+    inventoryClientProbe.expectMsg(ReceiveSupply(ProductRef(productId), ShipmentRef(shipmentId), delivered, count))
     inventoryClientProbe.reply(Right(InventoryItemView(productId, 20, 10)))
     inventoryQueueProbe.expectNoMsg()
 

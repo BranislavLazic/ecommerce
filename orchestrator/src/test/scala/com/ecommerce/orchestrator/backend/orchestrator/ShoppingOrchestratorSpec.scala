@@ -6,6 +6,7 @@ import java.util.UUID
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.testkit.{TestProbe, DefaultTimeout, ImplicitSender, TestKit}
 import com.ecommerce.common.clientactors.http.PaymentHttpClient.Pay
+import com.ecommerce.common.identity.Identity
 import com.ecommerce.common.views.InventoryRequest.HoldItemView
 import com.ecommerce.common.views.InventoryResponse
 import com.ecommerce.common.views.PaymentResponse.PaymentTokenView
@@ -27,10 +28,9 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
 
   import ShoppingOrchestrator._
   import InventoryProtocol._
-  import InventoryResponse._
   import ShoppingCartProtocol._
   import ShoppingCartResponse._
-  import ResponseViews._
+  import Identity._
 
   "The ShoppingOrchestrator" must {
 
@@ -42,8 +42,8 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
       val shoppingCartId = UUID.randomUUID()
       val customerId = UUID.randomUUID()
 
-      shoppingOrchestrator ! StartShopping(shoppingCartId, customerId)
-      shoppingCartClientProbe.expectMsg(CreateShoppingCart(shoppingCartId, customerId))
+      shoppingOrchestrator ! StartShopping(ShoppingCartRef(shoppingCartId), CustomerRef(customerId))
+      shoppingCartClientProbe.expectMsg(CreateShoppingCart(ShoppingCartRef(shoppingCartId), CustomerRef(customerId)))
       shoppingCartClientProbe.reply(Right(ShoppingCartView(shoppingCartId, Some(customerId), List.empty)))
       inventoryClientProbe.expectNoMsg()
       inventoryQueueProbe.expectNoMsg()
@@ -62,10 +62,10 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
       val count = 2
       val takeFromStock = false
 
-      shoppingOrchestrator ! PlaceInCart(shoppingCartId, productId, count, takeFromStock)
-      inventoryClientProbe.expectMsg(HoldItem(shoppingCartId, productId, count))
+      shoppingOrchestrator ! PlaceInCart(ShoppingCartRef(shoppingCartId), ProductRef(productId), count, takeFromStock)
+      inventoryClientProbe.expectMsg(HoldItem(ProductRef(productId), ShoppingCartRef(shoppingCartId), count))
       inventoryClientProbe.reply(Right(HoldItemView(count)))
-      shoppingCartClientProbe.expectMsg(AddItem(shoppingCartId, productId, count))
+      shoppingCartClientProbe.expectMsg(AddItem(ShoppingCartRef(shoppingCartId), ProductRef(productId), count))
       shoppingCartClientProbe.reply(Right(ShoppingCartView(shoppingCartId, Some(customerId),
         List(ShoppingCartItemView(productId, count)))))
       inventoryQueueProbe.expectNoMsg()
@@ -85,10 +85,10 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
       val count = 2
       val takeFromStock = false
 
-      shoppingOrchestrator ! RemoveFromCart(shoppingCartId, productId)
-      shoppingCartClientProbe.expectMsg(RemoveItem(shoppingCartId, productId))
+      shoppingOrchestrator ! RemoveFromCart(ShoppingCartRef(shoppingCartId), ProductRef(productId))
+      shoppingCartClientProbe.expectMsg(RemoveItem(ShoppingCartRef(shoppingCartId), ProductRef(productId)))
       shoppingCartClientProbe.reply(Right(ShoppingCartView(shoppingCartId, Some(customerId), List.empty)))
-      inventoryQueueProbe.expectMsg(ReleaseItem(productId, shoppingCartId))
+      inventoryQueueProbe.expectMsg(ReleaseItem(ProductRef(productId), ShoppingCartRef(shoppingCartId)))
       inventoryClientProbe.expectNoMsg()
       paymentClientProbe.expectNoMsg()
       expectMsg(Right(ShoppingCartView(shoppingCartId, Some(customerId), List.empty)))
@@ -107,13 +107,13 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
       val count2 = 1
       val takeFromStock = false
 
-      shoppingOrchestrator ! AbandonCart(shoppingCartId)
-      shoppingCartClientProbe.expectMsg(GetShoppingCart(shoppingCartId))
+      shoppingOrchestrator ! AbandonCart(ShoppingCartRef(shoppingCartId))
+      shoppingCartClientProbe.expectMsg(GetShoppingCart(ShoppingCartRef(shoppingCartId)))
       shoppingCartClientProbe.reply(Right(ShoppingCartView(shoppingCartId, Some(customerId),
         List(ShoppingCartItemView(productId1, count1), ShoppingCartItemView(productId2, count2)))))
-      inventoryQueueProbe.expectMsg(ReleaseItem(productId1, shoppingCartId))
-      inventoryQueueProbe.expectMsg(ReleaseItem(productId2, shoppingCartId))
-      shoppingCartClientProbe.expectMsg(ClearCart(shoppingCartId))
+      inventoryQueueProbe.expectMsg(ReleaseItem(ProductRef(productId1), ShoppingCartRef(shoppingCartId)))
+      inventoryQueueProbe.expectMsg(ReleaseItem(ProductRef(productId2), ShoppingCartRef(shoppingCartId)))
+      shoppingCartClientProbe.expectMsg(ClearCart(ShoppingCartRef(shoppingCartId)))
       shoppingCartClientProbe.reply(Right(ShoppingCartView(shoppingCartId, Some(customerId), List.empty)))
       inventoryClientProbe.expectNoMsg()
       paymentClientProbe.expectNoMsg()
@@ -134,14 +134,14 @@ class ShoppingOrchestratorSpec extends TestKit(ActorSystem("test-shopping-orches
       val takeFromStock = false
       val paymentId = UUID.randomUUID()
 
-      shoppingOrchestrator ! Checkout(shoppingCartId, "credit-card-number")
-      shoppingCartClientProbe.expectMsg(GetShoppingCart(shoppingCartId))
+      shoppingOrchestrator ! Checkout(ShoppingCartRef(shoppingCartId), "credit-card-number")
+      shoppingCartClientProbe.expectMsg(GetShoppingCart(ShoppingCartRef(shoppingCartId)))
       shoppingCartClientProbe.reply(Right(ShoppingCartView(shoppingCartId, Some(customerId),
         List(ShoppingCartItemView(productId1, count1), ShoppingCartItemView(productId2, count2)))))
       paymentClientProbe.expectMsg(Pay("credit-card-number"))
       paymentClientProbe.reply(Right(PaymentTokenView(paymentId)))
-      inventoryQueueProbe.expectMsg(ClaimItem(shoppingCartId, productId1, paymentId))
-      inventoryQueueProbe.expectMsg(ClaimItem(shoppingCartId, productId2, paymentId))
+      inventoryQueueProbe.expectMsg(ClaimItem(ProductRef(productId1), ShoppingCartRef(shoppingCartId), PaymentRef(paymentId)))
+      inventoryQueueProbe.expectMsg(ClaimItem(ProductRef(productId2), ShoppingCartRef(shoppingCartId), PaymentRef(paymentId)))
       inventoryClientProbe.expectNoMsg()
       expectMsg(Right(ShoppingCartView(shoppingCartId, Some(customerId),
         List(ShoppingCartItemView(productId1, count1), ShoppingCartItemView(productId2, count2)))))
