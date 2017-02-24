@@ -2,7 +2,13 @@ package com.ecommerce.orchestrator.backend.orchestrator
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.util.Timeout
+import cats.Applicative
+import cats.data.EitherT
+import cats.implicits._
+import com.ecommerce.common.clientactors.http.HttpClient.HttpClientError
+import com.ecommerce.orchestrator.backend.Mappers
 import com.ecommerce.orchestrator.backend.orchestrator.ProductOrchestrator.{SearchBySearchString, SearchByCategoryId, SearchByProductId}
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import com.ecommerce.common.identity.Identity._
 import com.ecommerce.orchestrator.backend.clientapi.{InventoryApi, ProductApi}
@@ -25,14 +31,21 @@ class ProductOrchestrator extends Actor with ActorLogging
   with ProductApi
   with InventoryApi {
 
+  import akka.pattern.pipe
+  import Mappers._
+
   implicit def executionContext = context.dispatcher
   implicit def timeout: Timeout = Timeout(3 seconds)
 
   def receive = {
     case SearchByProductId(pid) =>
-
+      val p = EitherT(getProductByProductId(pid))
+      val i = EitherT(getInventoryItem(pid))
+      Applicative[EitherT[Future, HttpClientError, ?]].map2(p, i)(mapToProductSummaryView)
+        .value.pipeTo(sender())
     case SearchByCategoryId(cid) =>
-
+      // This search and one below will work to combine Seqs of Product and Inventory
+      // so this will be a good place to explore Traversable from cats!!
     case SearchBySearchString(ocid, ss) =>
 
   }

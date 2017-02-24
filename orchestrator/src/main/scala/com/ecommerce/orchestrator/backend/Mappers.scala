@@ -1,5 +1,6 @@
 package com.ecommerce.orchestrator.backend
 
+import com.ecommerce.common.views.ProductResponse.ProductView
 import com.ecommerce.common.views.{InventoryResponse, ReceivingResponse}
 
 /**
@@ -23,4 +24,5 @@ object Mappers {
       inventoryItemView.onBackorder
     )
 
+  def mapToProductSummaryView(productView: ProductView, inventoryItemView: InventoryItemView): ProductSummaryView = ???
 }

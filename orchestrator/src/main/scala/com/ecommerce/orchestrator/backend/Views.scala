@@ -31,6 +31,8 @@ object ResponseViews {
                                    onBackorder: Int
                                  )
 
+  case class ProductSummaryView(displayName: String)
+
 }
 
 
