@@ -30,8 +30,11 @@ class ProductOrchestrator extends Actor with ActorLogging
 
   def receive = {
     case SearchByProductId(pid) =>
+
     case SearchByCategoryId(cid) =>
+
     case SearchBySearchString(ocid, ss) =>
+
   }
 
   def kill() = log.info("stopping children and self after message") // TODO: implementation to stop http client actors and self
