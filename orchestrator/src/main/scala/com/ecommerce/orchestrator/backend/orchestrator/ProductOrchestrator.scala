@@ -10,6 +10,7 @@ import com.ecommerce.common.clientactors.http.HttpClient
 import com.ecommerce.common.views.InventoryResponse.InventoryItemView
 import com.ecommerce.common.views.ProductResponse.ProductView
 import com.ecommerce.orchestrator.backend.Mappers
+import com.ecommerce.orchestrator.backend.ResponseViews.ProductSummaryView
 import com.ecommerce.orchestrator.backend.orchestrator.ProductOrchestrator.{SearchBySearchString, SearchByCategoryId, SearchByProductId}
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -47,15 +48,22 @@ class ProductOrchestrator extends Actor with ActorLogging
       val i = EitherT(getInventoryItem(pid))
       Applicative[EitherT[Future, HttpClientError, ?]].map2(p, i)(mapToProductSummaryView)
         .value.pipeTo(sender())
+      kill()
     case SearchByCategoryId(cid) =>
-      val plET: EitherT[Future, HttpClientError, List[ProductView]] = EitherT(getProductsByCategoryId(cid))
-      val ilET: EitherT[Future, HttpClientError, List[InventoryItemView]] = plET.flatMap(_.traverseU(p => EitherT(getInventoryItem(ProductRef(p.productId)))))
-      val pslET = Applicative[EitherT[Future, HttpClientError, ?]].map2(plET, ilET) { (pl, il) =>
-        (pl, il).zipped map {(p, i) => mapToProductSummaryView(p, i)}
-      }
-      pslET.value.pipeTo(sender())
+      getMergedProductSummary(getProductsByCategoryId(cid)).value.pipeTo(sender())
+      kill()
     case SearchBySearchString(ocid, ss) =>
+      getMergedProductSummary(getProductsBySearchString(ocid, ss)).value.pipeTo(sender())
+      kill()
+  }
 
+  private def getMergedProductSummary(productList: Future[Either[HttpClientError, List[ProductView]]]): EitherT[Future, HttpClientError, List[ProductSummaryView]] = {
+    val plET: EitherT[Future, HttpClientError, List[ProductView]] = EitherT(productList)
+    val ilET: EitherT[Future, HttpClientError, List[InventoryItemView]] =
+      plET.flatMap(_.traverseU(p => EitherT(getInventoryItem(ProductRef(p.productId)))))
+    Applicative[EitherT[Future, HttpClientError, ?]].map2(plET, ilET) { (pl, il) =>
+      (pl, il).zipped map {(p, i) => mapToProductSummaryView(p, i)}
+    }
   }
 
   def kill() = log.info("stopping children and self after message") // TODO: implementation to stop http client actors and self
