@@ -24,8 +24,6 @@ object ReceivingOrchestrator {
 
   val props = Props(new ReceivingOrchestrator)
 
-  val name = "receiving-orchestrator"
-
   case class GetShipmentSummary(shipmentId: ShipmentRef)
   case class RequestShipment(productId: ProductRef, ordered: ZonedDateTime, count: Int)
   case class AcknowledgeShipment(productId: ProductRef, shipmentId: ShipmentRef, expectedDelivery: ZonedDateTime, count: Int)

@@ -23,7 +23,7 @@ trait ProductApi { this: Actor =>
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  def productClient = context.actorOf(ProductHttpClient.props, ProductHttpClient.name)
+  def productClient = context.actorOf(ProductHttpClient.props)
 
   def getProductByProductId(productId: ProductRef): Future[HttpClientResult[ProductView]]  =
     productClient.ask(GetProductByProductId(productId)).mapTo[HttpClientResult[ProductView]]

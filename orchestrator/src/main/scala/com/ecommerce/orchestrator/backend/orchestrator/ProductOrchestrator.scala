@@ -24,8 +24,6 @@ object ProductOrchestrator {
 
   def props = Props(new ProductOrchestrator)
 
-  def name = "product-orchestrator"
-
   case class SearchByProductId(productId: ProductRef)
   case class SearchByCategoryId(categoryId: CategoryRef)
   case class SearchBySearchString(categoryId: Option[CategoryRef], searchString: String)

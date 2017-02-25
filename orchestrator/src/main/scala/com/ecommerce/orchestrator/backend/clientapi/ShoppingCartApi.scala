@@ -24,7 +24,7 @@ trait ShoppingCartApi { this: Actor =>
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  def shoppingCartClient = context.actorOf(ShoppingCartHttpClient.props, ShoppingCartHttpClient.name)
+  def shoppingCartClient = context.actorOf(ShoppingCartHttpClient.props)
 
   def createShoppingCart(shoppingCartId: ShoppingCartRef, customerId: CustomerRef): Future[HttpClientResult[ShoppingCartView]] =
     shoppingCartClient.ask(CreateShoppingCart(shoppingCartId, customerId)).mapTo[HttpClientResult[ShoppingCartView]]

@@ -20,8 +20,6 @@ object ShoppingOrchestrator {
 
   def props = Props(new ShoppingOrchestrator)
 
-  def name = "checkout-orchestrator"
-
   case class StartShopping(shoppingCartId: ShoppingCartRef, customerId: CustomerRef)
   case class AbandonCart(shoppingCartId: ShoppingCartRef)
   case class Checkout(shoppingCartId: ShoppingCartRef, creditCard: String)

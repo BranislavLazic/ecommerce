@@ -48,7 +48,7 @@ trait ReceivingRoutes {
       pathPrefix( "receiving" / "shipments" / ShipmentId ) { shipmentId =>
         pathEndOrSingleSlash {
           val gs = GetShipmentSummary(ShipmentRef(shipmentId))
-          val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
+          val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props)
           onSuccess(receivingOrchestrator.ask(gs).mapTo[HttpClientResult[ReceivingSummaryView]]) {
             _.fold(complete(BadRequest, _), complete(OK, _))
           }
@@ -63,7 +63,7 @@ trait ReceivingRoutes {
         pathEndOrSingleSlash {
           entity(as[RequestShipmentView]) { rsv =>
             val rs = RequestShipment(ProductRef(rsv.productId), rsv.ordered, rsv.count)
-            val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
+            val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props)
             onSuccess(receivingOrchestrator.ask(rs).mapTo[HttpClientResult[ReceivingSummaryView]]) {
               _.fold(complete(BadRequest, _), complete(OK, _))
             }
@@ -79,7 +79,7 @@ trait ReceivingRoutes {
         pathEndOrSingleSlash {
           entity(as[AcknowledgeShipmentView]) { asv =>
             val as = AcknowledgeShipment(ProductRef(asv.productId), ShipmentRef(shipmentId), asv.expectedDelivery, asv.count)
-            val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
+            val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props)
             onSuccess(receivingOrchestrator.ask(as).mapTo[HttpClientResult[ReceivingSummaryView]]) {
               _.fold(complete(BadRequest, _), complete(OK, _))
             }
@@ -95,7 +95,7 @@ trait ReceivingRoutes {
         pathEndOrSingleSlash {
           entity(as[AcceptShipmentView]) { asv =>
             val as = AcceptShipment(ProductRef(asv.productId), ShipmentRef(shipmentId), asv.delivered, asv.count)
-            val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props, ReceivingOrchestrator.name)
+            val receivingOrchestrator = system.actorOf(ReceivingOrchestrator.props)
             onSuccess(receivingOrchestrator.ask(as).mapTo[HttpClientResult[ReceivingSummaryView]]) {
               _.fold(complete(BadRequest, _), complete(OK, _))
             }

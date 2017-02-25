@@ -17,8 +17,6 @@ import scala.concurrent.Future
 object ProductHttpClient {
 
   def props = Props(new ProductHttpClient)
-
-  def name = "product-client"
 }
 
 class ProductHttpClient extends Actor with ActorLogging with ProductHttpClientApi {

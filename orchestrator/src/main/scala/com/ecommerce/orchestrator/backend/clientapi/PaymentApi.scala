@@ -18,7 +18,7 @@ trait PaymentApi { this: Actor =>
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  def paymentClient = context.actorOf(PaymentHttpClient.props, PaymentHttpClient.name)
+  def paymentClient = context.actorOf(PaymentHttpClient.props)
 
   def pay(creditCard: String): Future[HttpClientResult[PaymentTokenView]] =
     paymentClient.ask(Pay(creditCard)).mapTo[HttpClientResult[PaymentTokenView]]

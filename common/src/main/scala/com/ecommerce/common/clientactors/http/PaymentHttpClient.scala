@@ -9,8 +9,6 @@ object PaymentHttpClient {
 
   def props = Props(new PaymentHttpClient)
 
-  def name = "payment-manager"
-
   case class Pay(creditCard: String)
 }
 

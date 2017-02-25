@@ -8,8 +8,6 @@ import akka.actor.{ActorLogging, Props, Actor}
 object InventoryKafkaClient {
 
   val props = Props(new InventoryKafkaClient)
-
-  val name = "inventory-kafka-client"
 }
 
 class InventoryKafkaClient extends Actor with ActorLogging {

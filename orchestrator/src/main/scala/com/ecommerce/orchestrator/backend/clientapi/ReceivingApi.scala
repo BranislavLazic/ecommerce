@@ -25,7 +25,7 @@ trait ReceivingApi { this: Actor =>
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  val receivingClient = context.actorOf(ReceivingHttpClient.props, ReceivingHttpClient.name)
+  val receivingClient = context.actorOf(ReceivingHttpClient.props)
 
   def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]

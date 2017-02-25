@@ -18,8 +18,6 @@ import de.heikoseeberger.akkahttpcirce.CirceSupport
 object ShoppingCartHttpClient {
 
   val props = Props(new ShoppingCartHttpClient)
-
-  val name = "shoppingcart-http-client"
 }
 
 class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHttpClientApi {

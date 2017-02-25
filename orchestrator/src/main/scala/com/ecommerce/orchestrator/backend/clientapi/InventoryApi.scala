@@ -27,8 +27,8 @@ trait InventoryApi { this: Actor =>
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
-  def inventoryClient = context.actorOf(InventoryHttpClient.props, InventoryHttpClient.name)
-  def inventoryQueue = context.actorOf(InventoryKafkaClient.props, InventoryKafkaClient.name)
+  def inventoryClient = context.actorOf(InventoryHttpClient.props)
+  def inventoryQueue = context.actorOf(InventoryKafkaClient.props)
 
   def getInventoryItem(productID: ProductRef): Future[HttpClientResult[InventoryItemView]] =
     inventoryClient.ask(GetItem(productID)).mapTo[HttpClientResult[InventoryItemView]]

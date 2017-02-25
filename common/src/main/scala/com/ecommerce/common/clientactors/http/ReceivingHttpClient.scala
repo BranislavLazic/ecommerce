@@ -21,8 +21,6 @@ import scala.concurrent.Future
 object ReceivingHttpClient {
 
   val props = Props(new ReceivingHttpClient)
-
-  val name = "receiving-http-client"
 }
 
 class ReceivingHttpClient extends Actor with ReceivingHttpClientApi {

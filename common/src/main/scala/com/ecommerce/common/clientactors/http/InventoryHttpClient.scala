@@ -20,8 +20,6 @@ import com.ecommerce.common.identity.Identity
 object InventoryHttpClient {
 
   def props = Props(new InventoryHttpClient)
-
-  def name = "inventory-client"
 }
 
 class InventoryHttpClient extends Actor with ActorLogging with InventoryHttpClientApi {
