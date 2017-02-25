@@ -26,6 +26,7 @@ class ShoppingCartHttpClient extends Actor with ActorLogging with ShoppingCartHt
   import ShoppingCartProtocol._
   import ShoppingCartRequest._
   import akka.pattern.pipe
+
   implicit def executionContext = context.dispatcher
   implicit def system = context.system
 
