@@ -28,9 +28,9 @@ trait ProductApi { this: Actor =>
   def getProductByProductId(productId: ProductRef): Future[HttpClientResult[ProductView]]  =
     productClient.ask(GetProductByProductId(productId)).mapTo[HttpClientResult[ProductView]]
 
-  def getProductsByCategoryId(categoryId: CategoryRef): Future[HttpClientResult[Seq[ProductView]]] =
-    productClient.ask(GetProductByCategory(categoryId)).mapTo[HttpClientResult[Seq[ProductView]]]
+  def getProductsByCategoryId(categoryId: CategoryRef): Future[HttpClientResult[List[ProductView]]] =
+    productClient.ask(GetProductByCategory(categoryId)).mapTo[HttpClientResult[List[ProductView]]]
 
   def getProductsBySearchString(categoryId: Option[CategoryRef], searchString: String): Future[HttpClientResult[Seq[ProductView]]] =
-    productClient.ask(GetProductBySearchString(categoryId, searchString)).mapTo[HttpClientResult[Seq[ProductView]]]
+    productClient.ask(GetProductBySearchString(categoryId, searchString)).mapTo[HttpClientResult[List[ProductView]]]
 }
