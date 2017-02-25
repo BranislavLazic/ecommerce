@@ -1,12 +1,14 @@
 package com.ecommerce.orchestrator.backend.clientapi
 
 import akka.actor.Actor
+import akka.util.Timeout
 import com.ecommerce.common.clientactors.http.HttpClient.HttpClientResult
-import com.ecommerce.common.clientactors.http.ProductHttpClient
+import com.ecommerce.common.clientactors.protocols.ProductProtocol
+import com.ecommerce.common.clientactors.http.{HttpClient, ProductHttpClient}
 import com.ecommerce.common.identity.Identity
 import com.ecommerce.common.views.ProductResponse
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by lukewyman on 2/24/17.
@@ -14,12 +16,21 @@ import scala.concurrent.Future
 trait ProductApi { this: Actor =>
   import Identity._
   import ProductResponse._
+  import ProductProtocol._
+  import HttpClient._
+  import akka.pattern.ask
+
+  implicit def executionContext: ExecutionContext
+  implicit def timeout: Timeout
 
   def productClient = context.actorOf(ProductHttpClient.props, ProductHttpClient.name)
 
-  def getProductByProductId(productId: ProductRef): Future[HttpClientResult[ProductView]]  = ???
+  def getProductByProductId(productId: ProductRef): Future[HttpClientResult[ProductView]]  =
+    productClient.ask(GetProductByProductId(productId)).mapTo[HttpClientResult[ProductView]]
 
-  def getProductsByCategoryId(categoryId: CategoryRef): Future[HttpClientResult[Seq[ProductView]]] = ???
+  def getProductsByCategoryId(categoryId: CategoryRef): Future[HttpClientResult[Seq[ProductView]]] =
+    productClient.ask(GetProductByCategory(categoryId)).mapTo[HttpClientResult[Seq[ProductView]]]
 
-  def getProductsBySearchString(categoryId: Option[CategoryRef], searchString: String): Future[HttpClientResult[Seq[ProductView]]] = ???
+  def getProductsBySearchString(categoryId: Option[CategoryRef], searchString: String): Future[HttpClientResult[Seq[ProductView]]] =
+    productClient.ask(GetProductBySearchString(categoryId, searchString)).mapTo[HttpClientResult[Seq[ProductView]]]
 }
