@@ -112,15 +112,18 @@ lazy val productcatalogSettings = Seq(
   scalaVersion := Version.scala,
   mainClass in Global := Some("com.ecommerce.productcatalog.Boot"),
   assemblyJarName in assembly := "productcatalog.jar",
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3"),
   libraryDependencies ++=
     Groupings.akkaBasics ++
     Groupings.akkaHttp ++
-    Groupings.circe ++ Seq(
+    Groupings.circe ++
+    Groupings.slick ++
+    Seq(
       Library.scalaTest % "test"
     )
 )
 
-lazy val `product-catalog` = project.in(file("product-catalog")).settings(productcatalogSettings)
+lazy val `product-catalog` = project.in(file("product-catalog")).settings(productcatalogSettings).dependsOn(common)
 
 
 lazy val receivingSettings = Seq(

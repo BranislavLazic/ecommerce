@@ -15,6 +15,8 @@ object Version {
   final val leveldbJni = "1.8"
   final val jodaTime = "2.9.6"
   final val cats = "0.9.0"
+  final val slick = "3.2.0"
+  final val slf4jNop = "1.6.4"
 }
 
 object Library {
@@ -41,8 +43,12 @@ object Library {
   val akkaMultiNodeTestkit     = "com.typesafe.akka"          %%  "akka-multi-node-testkit"         % Version.akka
   val scalaTest                = "org.scalatest"              %%  "scalatest"                       % Version.scalaTest
 
-  val leveldb                  = "org.iq80.leveldb"           %   "leveldb"                       % Version.leveldb
-  val leveldbJni               = "org.fusesource.leveldbjni"  %   "leveldbjni-all"                % Version.leveldbJni
+  val leveldb                  = "org.iq80.leveldb"           %   "leveldb"                         % Version.leveldb
+  val leveldbJni               = "org.fusesource.leveldbjni"  %   "leveldbjni-all"                  % Version.leveldbJni
+
+  val slick                    = "com.typesafe.slick"         %% "slick"                            % Version.slick
+  val slf4jNop                 = "org.slf4j"                  %  "slf4j-nop"                        % Version.slf4jNop
+  val slickHikaricp            = "com.typesafe.slick"         %% "slick-hikaricp"                   % Version.slick
 }
 
 object Groupings {
@@ -77,5 +83,11 @@ object Groupings {
     Library.circeGeneric,
     Library.circeParser,
     Library.circeJava8
+  )
+
+  val slick = Seq(
+    Library.slick,
+    Library.slickHikaricp,
+    Library.slf4jNop
   )
 }

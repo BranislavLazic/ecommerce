@@ -59,10 +59,14 @@ class ProductOrchestrator extends Actor with ActorLogging
     val plET: EitherT[Future, HttpClientError, List[ProductView]] = EitherT(productList)
     val ilET: EitherT[Future, HttpClientError, List[InventoryItemView]] =
       plET.flatMap(_.traverseU(p => EitherT(getInventoryItem(ProductRef(p.productId)))))
+
     Applicative[EitherT[Future, HttpClientError, ?]].map2(plET, ilET) { (pl, il) =>
       (pl, il).zipped map {(p, i) => mapToProductSummaryView(p, i)}
     }
   }
 
-  def kill() = log.info("stopping children and self after message") // TODO: implementation to stop http client actors and self
+  def kill() = {
+    context.children foreach { context.stop(_) }
+    context.stop(self)
+  }
 }

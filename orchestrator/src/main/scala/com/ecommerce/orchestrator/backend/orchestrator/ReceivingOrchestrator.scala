@@ -72,5 +72,9 @@ class ReceivingOrchestrator extends Actor with ActorLogging
       kill()
   }
 
-  def kill() = log.info("stopping children and self after processing message") // TODO: implementation to stop http cleint actors and self
+  def kill() = {
+    context.children foreach { context.stop(_) }
+    context.stop(self)
+  }
+
 }

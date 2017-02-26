@@ -69,5 +69,10 @@ class ShoppingOrchestrator extends Actor with ActorLogging
       kill()
   }
 
-  def kill() = log.info("stopping children and self after processing message") // TODO: implementation to kill http cleint actors and self
+  def kill() = log.info("stopping actors")
+
+//  def kill() = {
+//    context.children foreach { context.stop(_) }
+//    context.stop(self)
+//  }
 }
