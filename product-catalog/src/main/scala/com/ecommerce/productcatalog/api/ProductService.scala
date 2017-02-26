@@ -30,22 +30,17 @@ trait ProductRoutes {
 
   def routes: Route =
     getProductByProductId ~
+    getProductsBySearchString ~
     getProductsByCategoryId ~
-    getProductsBySearchString
+    getCategoryById ~
+    getCategories ~
+    getProductsByManufacturerId ~
+    getManufacturerById ~
+    getManufacturers
 
   def getProductByProductId: Route = {
     get {
       pathPrefix("products" / ProductId ) { productId =>
-        pathEndOrSingleSlash {
-          complete(OK)
-        }
-      }
-    }
-  }
-
-  def getProductsByCategoryId: Route = {
-    get {
-      pathPrefix("products" / CategoryId) { categoryId =>
         pathEndOrSingleSlash {
           complete(OK)
         }
@@ -64,7 +59,68 @@ trait ProductRoutes {
     }
   }
 
+  def getProductsByCategoryId: Route = {
+    get {
+      pathPrefix("categories" / CategoryId / "products") { categoryId =>
+        pathEndOrSingleSlash {
+          complete(OK)
+        }
+      }
+    }
+  }
+
+  def getCategoryById: Route = {
+    get {
+      pathPrefix("categories" / CategoryId) { categoryId =>
+        pathEndOrSingleSlash {
+          complete(OK)
+        }
+      }
+    }
+  }
+
+  def getCategories: Route = {
+    get {
+      pathPrefix("categories") {
+        pathEndOrSingleSlash {
+          complete(OK)
+        }
+      }
+    }
+  }
+
+  def getProductsByManufacturerId: Route = {
+    get {
+      pathPrefix("manufacturers" / ManufacturerId / "products") { manufacturerId =>
+        pathEndOrSingleSlash {
+          complete(OK)
+        }
+      }
+    }
+  }
+
+  def getManufacturerById: Route = {
+    get {
+      pathPrefix("manufacturers" / ManufacturerId) { manufacturerId =>
+        pathEndOrSingleSlash {
+          complete(OK)
+        }
+      }
+    }
+  }
+
+  def getManufacturers: Route = {
+    get {
+      pathPrefix("manufacturers") {
+        pathEndOrSingleSlash {
+          complete(OK)
+        }
+      }
+    }
+  }
+
   val IdSegment = Segment.flatMap(id => Try(UUID.fromString(id)).toOption)
   val ProductId = IdSegment
   val CategoryId = IdSegment
+  val ManufacturerId = IdSegment
 }
