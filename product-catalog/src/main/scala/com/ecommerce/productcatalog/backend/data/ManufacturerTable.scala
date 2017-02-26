@@ -7,7 +7,7 @@ import slick.jdbc.MySQLProfile.api._
 /**
   * Created by lukewyman on 2/25/17.
   */
-class ManufacturerTable(tag: Tag) extends Table[(UUID, String)](tag, "manufacturer") {
+private[data] class ManufacturerTable(tag: Tag) extends Table[(UUID, String)](tag, "manufacturer") {
 
   def manufacturerId = column[UUID]("manufacturerid", O.PrimaryKey)
   def manufacturerName = column[String]("manufacturername")

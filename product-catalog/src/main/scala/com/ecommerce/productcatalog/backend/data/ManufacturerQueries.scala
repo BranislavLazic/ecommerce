@@ -1,15 +1,26 @@
 package com.ecommerce.productcatalog.backend.data
 
 import java.util.UUID
-
 import slick.jdbc.MySQLProfile.api._
+
 /**
   * Created by lukewyman on 2/26/17.
   */
-trait ManufacturerQueries {
+trait ManufacturerQueries extends Database {
 
-  def getAll = TableQuery[ManufacturerTable]
+  private def tableQuery = TableQuery[ManufacturerTable]
 
-  def getById(manufacturerId: UUID) = getAll.filter(_.manufacturerId === manufacturerId)
+  def getAll = {
+    val query = tableQuery.map(toManufacturer)
+    db.run(query.result)
+  }
+
+  def getById(manufacturerId: UUID) = {
+    val query = tableQuery.filter(_.manufacturerId === manufacturerId)
+    db.run(query.result)
+  }
+
+  private def toManufacturer(r: ManufacturerTable) =
+    (r.manufacturerId, r.manufacturerName) <> (Manufacturer.tupled, Manufacturer.unapply)
 
 }

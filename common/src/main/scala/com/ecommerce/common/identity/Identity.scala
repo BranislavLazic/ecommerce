@@ -14,6 +14,8 @@ object Identity {
 
   case class CustomerRef(id: UUID) extends Id
 
+  case class ManufacturerRef(id: UUID) extends Id
+
   case class PaymentRef(id: UUID) extends Id
 
   case class ProductRef(id: UUID) extends Id

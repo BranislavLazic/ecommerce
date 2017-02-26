@@ -7,7 +7,7 @@ import slick.jdbc.MySQLProfile.api._
 /**
   * Created by lukewyman on 2/25/17.
   */
-class ProductTable(tag: Tag) extends Table[(UUID, UUID, UUID, String, String, String, Double)](tag, "product") {
+private[data] class ProductTable(tag: Tag) extends Table[(UUID, UUID, UUID, String, String, String, Double)](tag, "product") {
 
   def productId = column[UUID]("productid")
   def categoryId = column[UUID]("categoryid")
