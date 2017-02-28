@@ -17,7 +17,7 @@ trait CategoryQueries extends Database {
 
   def getById(categoryId: UUID) = {
     val query = tableQuery.filter(_.categoryId === categoryId).map(toCategory)
-    db.run(query.result)
+    db.run(query.result.head)
   }
 
   private def toCategory(r: CategoryTable) =

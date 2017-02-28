@@ -21,10 +21,13 @@ class ProductSearch extends Actor with ActorLogging with ProductQueries {
     case GetProductByProductId(pid) =>
       getProductById(pid.id).pipeTo(sender())
       kill()
-    case GetProductByCategory(cid) =>
+    case GetProductsByCategory(cid) =>
       getProductsByCategory(cid.id).pipeTo(sender())
       kill()
-    case GetProductBySearchString(ocid, ss) =>
+    case GetProductsByManufacturer(mid) =>
+      getProductsByManufacturer(mid.id).pipeTo(sender())
+      kill()
+    case GetProductsBySearchString(ocid, ss) =>
       getProductsBySearchString(ocid.map(_.id), ss).pipeTo(sender())
       kill()
   }

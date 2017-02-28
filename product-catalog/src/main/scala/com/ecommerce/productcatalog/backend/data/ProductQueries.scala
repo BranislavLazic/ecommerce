@@ -9,6 +9,7 @@ import slick.jdbc.MySQLProfile.api._
   */
 
 trait ProductQueries extends Database {
+//TODO: Waaaaaaay too much code duplication in this trait. Need to come back and refactor
 
   private val products = TableQuery[ProductTable]
   private val categories = TableQuery[CategoryTable]
@@ -32,6 +33,21 @@ trait ProductQueries extends Database {
   def getProductsByCategory(categoryId: UUID) = {
     val query = for {
       p <- products if p.categoryId === categoryId
+      c <- categories if p.categoryId === c.categoryId
+      m <- manufacturers if p.manufacturerId === m.manufacturerId
+    } yield (p, c, m)
+    val projectedQuery = query.map {
+      case (p, c, m) =>
+        val category = (c.categoryId, c.categoryName) <> (Category.tupled, Category.unapply)
+        val manufacturer = (m.manufacturerId, m.manufacturerName) <> (Manufacturer.tupled, Manufacturer.unapply)
+        (p.productId, p.productCode, p.displayName, p.description, p.price, category, manufacturer) <> (Product.tupled, Product.unapply)
+    }
+    db.run(projectedQuery.result)
+  }
+
+  def getProductsByManufacturer(manufacturerId: UUID) = {
+    val query = for {
+      p <- products if p.manufacturerId === manufacturerId
       c <- categories if p.categoryId === c.categoryId
       m <- manufacturers if p.manufacturerId === m.manufacturerId
     } yield (p, c, m)
