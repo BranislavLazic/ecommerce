@@ -24,14 +24,14 @@ The Orchestrator module is the command-and-control of the project, and it's API 
 ###Microservices (Modules)###
 Each module in ecommerce is represented by a microservice, implemented as an Akka application. Each application has a REST API, implemented with Akka HTTP.
 
+* **product-catalog** - uses single-use Akka Actors and Slick to retreive product information from a MySql database.
 * **shoppingcart** - Clustered persistent actors that represent shopping carts
 * **inventory** - Clustered persistent actors that represent the in-stock and backorder quantities for a given product. Holds for customers that have placed the item in their carts are also managed here.
-* **receiving** - Clustered persistent actors that represent in-bound shipments to replenish product supply.
-* **payment** - (not done) - no idea what this will look like. I'd like to do something with third party APIs for Visa and PayPal, etc.
+* **receiving** - Clustered persistent actors that represent in-bound shipments to replenish product supply. This microservice will likely remain dead simple. It's mostly here to demonstrate the orchestrator coordinating calls to Inventory.
 * **order-tracking** - (skeleton and some REST API) - will manage the status of an order as it changes state.
-* **product-catalog** - uses single-use Akka Actors and Slick to retreive product information from a MySql database.
 * **shipping** - (not done) - vague idea of using third party APIs to submit outbound shipments to UPS, USPS, etc.
 * **fulfillment** - (not done) - will manage order item fulfilments as they happen in the warehouse.
+* **payment** - (not done) - no idea what this will look like. I'd like to do something with third party APIs for Visa and PayPal, etc.
 
 ###Bibliography###
 
