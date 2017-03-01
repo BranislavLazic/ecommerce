@@ -27,9 +27,9 @@ Each module in ecommerce is represented by a microservice, implemented as an Akk
 * **shoppingcart** - Clustered persistent actors that represent shopping carts
 * **inventory** - Clustered persistent actors that represent the in-stock and backorder quantities for a given product. Holds for customers that have placed the item in their carts are also managed here.
 * **receiving** - Clustered persistent actors that represent in-bound shipments to replenish product supply.
-* **payment** - (not done) - no idea what this will look like. I'd like to do something with third party APIs for Visa and PayPal, etc.'
+* **payment** - (not done) - no idea what this will look like. I'd like to do something with third party APIs for Visa and PayPal, etc.
 * **order-tracking** - (skeleton and some REST API) - will manage the status of an order as it changes state.
-* **product-catalog** - (not done) - will use Slick to look up product descriptions in a MySQL database.
+* **product-catalog** - uses single-use Akka Actors and Slick to retreive product information from a MySql database.
 * **shipping** - (not done) - vague idea of using third party APIs to submit outbound shipments to UPS, USPS, etc.
 * **fulfillment** - (not done) - will manage order item fulfilments as they happen in the warehouse.
 

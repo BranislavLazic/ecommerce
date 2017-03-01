@@ -6,6 +6,10 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server._
 import akka.util.Timeout
+import com.ecommerce.common.clientactors.protocols.ProductProtocol._
+import com.ecommerce.common.identity.Identity.{ManufacturerRef, CategoryRef, ProductRef}
+import com.ecommerce.productcatalog.backend.actor.{ManufacturerSearch, CategorySearch, ProductSearch}
+import com.ecommerce.productcatalog.backend.data.{Product, Category, Manufacturer}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.ExecutionContext
@@ -20,10 +24,14 @@ case class ProductService(val system: ActorSystem, val requestTimeout: Timeout) 
 
 trait ProductRoutes {
 
-  import CirceSupport._
   import Directives._
   import StatusCodes._
+  import CirceSupport._
   import io.circe.generic.auto._
+  import akka.pattern.ask
+  import ResponseMappers._
+
+  def system: ActorSystem
 
   implicit def requestTimeout: Timeout
   implicit def executionContext: ExecutionContext
@@ -42,7 +50,10 @@ trait ProductRoutes {
     get {
       pathPrefix("products" / ProductId ) { productId =>
         pathEndOrSingleSlash {
-          complete(OK)
+          val productSearch = system.actorOf(ProductSearch.props)
+          onSuccess(productSearch.ask(GetProductByProductId(ProductRef(productId))).mapTo[Product]) { p =>
+            complete(OK, maptoProductView(p))
+          }
         }
       }
     }
@@ -63,7 +74,10 @@ trait ProductRoutes {
     get {
       pathPrefix("categories" / CategoryId / "products") { categoryId =>
         pathEndOrSingleSlash {
-          complete(OK)
+          val productSearch = system.actorOf(ProductSearch.props)
+          onSuccess(productSearch.ask(GetProductsByCategory(CategoryRef(categoryId))).mapTo[List[Product]]) { ps =>
+            complete(OK, ps.map(maptoProductView(_)))
+          }
         }
       }
     }
@@ -73,7 +87,10 @@ trait ProductRoutes {
     get {
       pathPrefix("categories" / CategoryId) { categoryId =>
         pathEndOrSingleSlash {
-          complete(OK)
+          val categorySearch = system.actorOf(CategorySearch.props)
+          onSuccess(categorySearch.ask(GetCategoryById(CategoryRef(categoryId))).mapTo[Category]) { c =>
+            complete(OK, mapToCategoryView(c))
+          }
         }
       }
     }
@@ -83,7 +100,10 @@ trait ProductRoutes {
     get {
       pathPrefix("categories") {
         pathEndOrSingleSlash {
-          complete(OK)
+          val categorySearch = system.actorOf(CategorySearch.props)
+          onSuccess(categorySearch.ask(GetCategories).mapTo[List[Category]]) { cs =>
+            complete(OK, cs.map(mapToCategoryView(_)))
+          }
         }
       }
     }
@@ -93,7 +113,10 @@ trait ProductRoutes {
     get {
       pathPrefix("manufacturers" / ManufacturerId / "products") { manufacturerId =>
         pathEndOrSingleSlash {
-          complete(OK)
+          val productSearch = system.actorOf(ProductSearch.props)
+          onSuccess(productSearch.ask(GetProductsByManufacturer(ManufacturerRef(manufacturerId))).mapTo[List[Product]]) { ps =>
+            complete(OK, ps.map(maptoProductView(_)))
+          }
         }
       }
     }
@@ -103,7 +126,10 @@ trait ProductRoutes {
     get {
       pathPrefix("manufacturers" / ManufacturerId) { manufacturerId =>
         pathEndOrSingleSlash {
-          complete(OK)
+          val manufacturerSearch = system.actorOf(ManufacturerSearch.props)
+          onSuccess(manufacturerSearch.ask(GetManufacturerById(ManufacturerRef(manufacturerId))).mapTo[Manufacturer]) { m =>
+            complete(OK, mapToManufacturerView(m))
+          }
         }
       }
     }
@@ -113,7 +139,10 @@ trait ProductRoutes {
     get {
       pathPrefix("manufacturers") {
         pathEndOrSingleSlash {
-          complete(OK)
+          val manufacturerSeach = system.actorOf(ManufacturerSearch.props)
+          onSuccess(manufacturerSeach.ask(GetManufacturers).mapTo[List[Manufacturer]]) { ms =>
+            complete(OK, ms.map(mapToManufacturerView(_)))
+          }
         }
       }
     }

@@ -8,4 +8,4 @@ import slick.lifted.MappedProjection
 /**
   * Created by lukewyman on 2/26/17.
   */
-private[data] trait Database { val db = Database.forConfig("") }
+private[data] trait Database { val db = Database.forConfig("mysqlDb") }

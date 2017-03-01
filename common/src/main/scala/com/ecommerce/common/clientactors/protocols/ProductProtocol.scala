@@ -9,8 +9,9 @@ object ProductProtocol {
   import Identity._
 
   case class GetProductByProductId(productId: ProductRef)
-  case class GetProductByCategory(categoryId: CategoryRef)
-  case class GetProductBySearchString(categoryId: Option[CategoryRef], SearchString: String)
+  case class GetProductsByCategory(categoryId: CategoryRef)
+  case class GetProductsBySearchString(categoryId: Option[CategoryRef], SearchString: String)
+  case class GetProductsByManufacturer(manufacturerId: ManufacturerRef)
   case class GetCategoryById(categoryId: CategoryRef)
   case object GetCategories
   case class GetManufacturerById(manufacturerId: ManufacturerRef)

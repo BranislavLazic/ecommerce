@@ -7,5 +7,23 @@ import java.util.UUID
   */
 object ProductResponse {
 
-  case class ProductView(productId: UUID, productCode: String, displayName: String, manufacturerId: UUID, description: String)
+  case class CategoryView(
+                           categoryId: UUID,
+                           categoryName: String
+                         )
+
+  case class ManufacturerView(
+                           manufacturerId: UUID,
+                           manufacturerName: String
+                         )
+
+  case class ProductView(
+                          productId: UUID,
+                          productCode: String,
+                          displayName: String,
+                          description: String,
+                          price: Double,
+                          category: CategoryView,
+                          manufacturer: ManufacturerView
+                        )
 }

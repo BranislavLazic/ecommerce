@@ -29,9 +29,9 @@ class ProductHttpClient extends Actor with ActorLogging with ProductHttpClientAp
   def receive = {
     case GetProductByProductId(pid) =>
       getProductByProductId(pid).pipeTo(sender())
-    case GetProductByCategory(cid) =>
+    case GetProductsByCategory(cid) =>
       getProductsByCategoryId(cid)
-    case GetProductBySearchString(ocid, ss) =>
+    case GetProductsBySearchString(ocid, ss) =>
       getProductsBySearchString(ocid, ss)
   }
 
