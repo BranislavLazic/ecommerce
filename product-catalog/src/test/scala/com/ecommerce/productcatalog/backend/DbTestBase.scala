@@ -11,7 +11,7 @@ import slick.jdbc.MySQLProfile.api._
 /**
   * Created by lukewyman on 2/28/17.
   */
-trait DbTestBase {
+object DbTestBase {
 
   val config = aMysqldConfig(v5_7_16)
     .withPort(3307)
@@ -23,5 +23,6 @@ trait DbTestBase {
     .addSchema("productcatalog", classPathScript("db/001-schema.sql"))
     .start()
 
-  val db = Database.forURL("jdbc:mysql://localhost:3307/productcatalog", driver = "com.mysql.jdbc.Driver", user = "test", password = "password1")
+  //val db = Database.forURL("jdbc:mysql://localhost:3307/productcatalog", driver = "com.mysql.jdbc.Driver", user = "test", password = "password1")
+  val db = Database.forConfig("mysqlDb")
 }

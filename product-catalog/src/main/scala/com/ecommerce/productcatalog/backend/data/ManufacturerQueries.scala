@@ -16,7 +16,7 @@ trait ManufacturerQueries extends Database {
   }
 
   def getById(manufacturerId: UUID) = {
-    val query = tableQuery.filter(_.manufacturerId === manufacturerId)
+    val query = tableQuery.filter(_.manufacturerId === manufacturerId).map(toManufacturer)
     db.run(query.result.head)
   }
 
