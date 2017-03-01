@@ -119,7 +119,8 @@ lazy val productcatalogSettings = Seq(
     Groupings.circe ++
     Groupings.slick ++
     Seq(
-      Library.scalaTest % "test"
+      Library.scalaTest % "test",
+      Library.wixMysql  % "test"
     )
 )
 

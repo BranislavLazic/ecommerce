@@ -17,6 +17,8 @@ object Version {
   final val cats = "0.9.0"
   final val slick = "3.2.0"
   final val slf4jNop = "1.6.4"
+  final val wixMysql = "2.1.3"
+  final val mysqlDriver = "6.0.5"
 }
 
 object Library {
@@ -49,6 +51,9 @@ object Library {
   val slick                    = "com.typesafe.slick"         %% "slick"                            % Version.slick
   val slf4jNop                 = "org.slf4j"                  %  "slf4j-nop"                        % Version.slf4jNop
   val slickHikaricp            = "com.typesafe.slick"         %% "slick-hikaricp"                   % Version.slick
+  val mysqlDriver              = "mysql"                      %  "mysql-connector-java"             % Version.mysqlDriver
+
+  val wixMysql                 = "com.wix"                    %  "wix-embedded-mysql"               % Version.wixMysql
 }
 
 object Groupings {
@@ -88,6 +93,7 @@ object Groupings {
   val slick = Seq(
     Library.slick,
     Library.slickHikaricp,
-    Library.slf4jNop
+    Library.slf4jNop,
+    Library.mysqlDriver
   )
 }
