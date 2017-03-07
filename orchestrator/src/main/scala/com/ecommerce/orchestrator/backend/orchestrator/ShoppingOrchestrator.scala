@@ -6,10 +6,8 @@ import akka.actor.{ActorLogging, Actor, Props}
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.implicits._
-import com.ecommerce.common.clientactors.http._
-import com.ecommerce.common.clientactors.kafka._
 import com.ecommerce.common.identity.Identity.{PaymentRef, ProductRef, CustomerRef, ShoppingCartRef}
-import com.ecommerce.orchestrator.backend.clientapi.{ShoppingCartApi, PaymentApi, InventoryApi}
+import com.ecommerce.orchestrator.backend.clientapi._
 
 import scala.concurrent.duration._
 
@@ -30,7 +28,9 @@ object ShoppingOrchestrator {
 class ShoppingOrchestrator extends Actor with ActorLogging
   with ShoppingCartApi
   with InventoryApi
-  with PaymentApi {
+  with PaymentApi
+  with ProductApi {
+
   import ShoppingOrchestrator._
   import akka.pattern.pipe
 

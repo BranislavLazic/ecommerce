@@ -33,6 +33,14 @@ object ResponseViews {
 
   case class ProductSummaryView(displayName: String)
 
+  case class ItemSummaryView(
+                            
+                            )
+
+  case class ShoppingCartSummaryView(
+
+                                    )
+
 }
 
 
