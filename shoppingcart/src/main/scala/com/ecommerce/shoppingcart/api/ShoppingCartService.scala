@@ -18,7 +18,7 @@ import scala.util.Try
   * Created by lukewyman on 12/11/16.
   */
 class ShoppingCartService(val shoppingCarts: ActorRef, val system: ActorSystem, val requestTimeout: Timeout) extends ShoppingCartRoutes {
-  val executionContext = system.dispatcher
+  implicit val executionContext = system.dispatchers.lookup("http-routes-dispatcher")
 }
 
 trait ShoppingCartRoutes {
