@@ -4,16 +4,31 @@ Akka actors and Scala concurrency are effective tools for creating concurrent ap
 
 This post describes how the [Orchestrator](https://github.com/lukewyman/ecommerce/tree/master/orchestrator) in ecommerce uses Actors and Futures to coordinate calls to microservices. The microservice APIs in ecommerce are exposed as REST endpoints, so each microservice is represented by an HTTP Client actor in the Orchestrator module. For insights on how to build an Akka actor that works as an HTTP client using Akka HTTP, take a look at [Creating an HTTP Client Actor](http-client-actor.md). 
 
-The Orchestrator module is the heart of e-commerce. Its REST API is the top-level interface at which all shopping and store management requests are made. Each use case consists of a series of web service calls to the applicable microservices, which must then be combined in some way to return a meaningful response to the user. For example, the use case of an inventory clerk viewing the status of an order to a wholesaler for a given Product would entail:
+The Orchestrator module is the heart of e-commerce. Its REST API is the top-level interface at which all shopping and store management requests are made. Each use case consists of a series of web service calls to the applicable microservices, the responses of which must then be combined in some way to return a meaningful response to the user. For example, the use case of an inventory clerk viewing the status of an order to a wholesaler for a given Product would entail:
 
 + a GET call to the Receiving microservice to get the Shipment
-+ a GET call to the Inventory microservice to get a summary of state of the Product in Inventory
-+ a GET call to the Product microservice to get the product details for display purposes
++ a GET call to the Inventory microservice to get a summary of the state of the Product in Inventory
++ a GET call to the Product microservice to get the Product details for display purposes
 + some crunching to create a unified response view
 
-A good way to structure a solution to a problem like this, is to create a coordinating actor for each group of related use cases. The `ReceivingActor`, which I will use as the example for this post, will handle the use cases relevant to the Receiving department of ecommerce....
+A good way to structure a solution to a problem like this, is to create a coordinating actor for each group of related use cases. The coordinating actor would then have an HTTP Client actor for each microservice that it needs to call. The HTTP Client actors are thus children of the coordinating actor. The coordinating actor will make calls to each of the child actors necessary for a given request, and then combine the resulting Futures to create the response to be returned to the Orchestrator REST API.
 
 A caveat to all this, is that composing such a solutuon when working on a non-trivial project requires managing complexity. Calls to web services aren't always successful, so error handling is required. Managing concurrency in a production-bound project isn't always straigh forward. And, finally, the code required to deal with all this can get a little unwieldy for one little actor class. It's going to take a couple of passes to get this done.
+
+### The basic structure
+
+The `ReceivingActor`, which I will use as the example for this post, will handle the use cases relevant to the Receiving department of ecommerce. The `ReceivingActor` requires three HTTP Client actors as children - an `InventoryHttpClient` for the Inventory microservice, a `ProductHTTPClient` for Product, and a `ReceivingHTTPClient` for Receiving. So a good start to the `ReceivingActor` might look something like this:
+
+```scala
+class ReceivingOrchestrator extends Actor {
+
+  def inventoryClient = context.actorOf(InventoryHttpClient.props)
+  def productClient = context.actorOf(ProductHttpClient.props)
+  val receivingClient = context.actorOf(ReceivingHttpClient.props)
+  
+  def receive = ???
+}
+```
 
 ### Making the calls
 
