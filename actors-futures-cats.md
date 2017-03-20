@@ -1,6 +1,6 @@
 ## Combining web service calls with Actors and Futures 
 
-Akka actors and Scala concurrency are effective tools for creating concurrent applications. Scala Futures represent concurrent functions, and provide a way to maninpuate and combine concurrent tasks without blocking (or, as we'll see later, a way to isolate and manage blocking when working with Futures). Akka actors are essentially lightweight concurrent objects, representing multiple tasks to be carried out concurrently. Combining the two yields a powerful tool set for simplifying managing concurrent tasks. 
+Akka actors and Scala concurrency are effective tools for creating concurrent applications. Scala Futures represent concurrent functions, and provide a way to maninpuate and combine concurrent tasks without blocking (or, as we'll see later, provide a way to isolate and manage blocking when working with Futures). Akka actors are essentially lightweight concurrent objects, representing multiple tasks to be carried out concurrently. Combining the two yields a powerful tool set for simplifying managing concurrent tasks. 
 
 This post describes how the [Orchestrator](https://github.com/lukewyman/ecommerce/tree/master/orchestrator) in ecommerce uses Actors and Futures to coordinate calls to microservices. The microservice APIs in ecommerce are exposed as REST endpoints, so each microservice is represented by an HTTP Client actor in the Orchestrator module. For insights on how to build an Akka actor that works as an HTTP client using Akka HTTP, take a look at [Creating an HTTP Client Actor](http-client-actor.md). 
 
@@ -17,7 +17,7 @@ A caveat to all this, is that composing such a solutuon when working on a non-tr
 
 ### The basic structure
 
-The `ReceivingActor`, which I will use as the example for this post, will handle the use cases relevant to the Receiving department of ecommerce. The `ReceivingActor` requires three HTTP Client actors as children - an `InventoryHttpClient` for the Inventory microservice, a `ProductHTTPClient` for Product, and a `ReceivingHTTPClient` for Receiving. So a good start to the `ReceivingActor` might look something like this:
+The `ReceivingActor`, which we will use as the example for this exercise, will handle the use cases relevant to the Receiving department of ecommerce. The `ReceivingActor` requires three HTTP Client actors as children - an `InventoryHttpClient` for the Inventory microservice, a `ProductHttpClient` for Product, and a `ReceivingHttpClient` for Receiving. So a start to the `ReceivingOrchestrator` might look something like this:
 
 ```scala
 class ReceivingOrchestrator extends Actor {
@@ -32,7 +32,16 @@ class ReceivingOrchestrator extends Actor {
 
 ### Making the calls
 
-
+Working with Futures in actors is pretty straight forward. The `ReceivingOrchestrator` actor asks an Http Client actor for a REST response by sending it a message with the `ask` pattern:
+ 
+ ```scala
+ val gs: Future[ShipmentView] = receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]
+ ```
+ 
+ `gs` is a Future[ShipmentView], which takes as long to complete as it takes for the `ReceivingHttpClient` actor to send a reply. Since futures are Monads (i.e. they have a method called `flatMap`), we can manipulate and combine several Futures in a 'Monadic Flow', which results in a Future containing our final result. In this case, we want to `ask` the `ReceivingHttpClient`, the `InventoryHttpClient` and the `ProductHttpClient` for the responses we'll need to create a combined response that displays the status of the Shipment, along with the status of the Product in Inventory, and the Product details. `mapToReceivingSummaryView` is a function that takes the responses from each of the Http Client actors (a `ShipmentView`, an `InventoryItemView` and a `ProductView`)  and combines them to create a `ReceivingSummaryView`, the response that will be returned to the sender.
+ 
+ Finally, Akka provides a `pipe` pattern to send the result of the `Future[ReceivingSummaryView]` to the sender, in this case, the Akka HTTP REST API. It is important to note that this is the point at which the Future blocks. The `pipe` pattern waits for the Future to complete, before sending the result, a naked `ReceivingSummaryView` to the sender. Putting this all together, gives us:
+  
 
 ```scala
 
@@ -49,11 +58,10 @@ class ReceivingOrchestrator(timeout: Timeout) extends Actor {
   val receivingClient = context.actorOf(ReceivingHttpClient.props)
 
   def receive = {
-    case GetShipmentSummary(sid) =>
-      
+    case GetShipmentSummary(sid) =>      
       // A Monadic flow to combine the results of the returned messages.
       val result = for {
-        gs <- receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]  // each call returns a Future with a response
+        gs <- receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]  // each call returns a Future with an HTTP Client response
         gi <- inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[InventoryItemView]
         gp <- productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[ProductView]
       } yield mapToReceivingSummaryView(gs, gi, gp)
@@ -63,3 +71,23 @@ class ReceivingOrchestrator(timeout: Timeout) extends Actor {
 }
 
 ```
+
+Not bad, so far. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to get tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. The code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract this away into a set of reusable client API traits.
+
+### The client APIs
+
+
+
+### Handling errors from the HTTP clients
+
+
+#### The EitherT Monad Transformer from Cats
+
+
+#### Other things Cats can do
+
+
+### Creating and configuring a blocking dispatcher
+
+
+
