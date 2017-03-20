@@ -32,13 +32,13 @@ class ReceivingOrchestrator extends Actor {
 
 ### Making the calls
 
-Working with Futures in actors is pretty straight forward. The `ReceivingOrchestrator` actor asks an Http Client actor for a REST response by sending it a message with the `ask` pattern:
+Working with Futures in actors is pretty straight forward. The `ReceivingOrchestrator` actor asks an Http Client actor for a REST response by sending it a message with the `ask` pattern. Using `ask` always returns a Future of the result:
  
  ```scala
  val gs: Future[ShipmentView] = receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]
  ```
  
- `gs` is a Future[ShipmentView], which takes as long to complete as it takes for the `ReceivingHttpClient` actor to send a reply. Since futures are Monads (i.e. they have a method called `flatMap`), we can manipulate and combine several Futures in a 'Monadic Flow', which results in a Future containing our final result. In this case, we want to `ask` the `ReceivingHttpClient`, the `InventoryHttpClient` and the `ProductHttpClient` for the responses we'll need to create a combined response that displays the status of the Shipment, along with the status of the Product in Inventory, and the Product details. `mapToReceivingSummaryView` is a function that takes the responses from each of the Http Client actors (a `ShipmentView`, an `InventoryItemView` and a `ProductView`)  and combines them to create a `ReceivingSummaryView`, the response that will be returned to the sender.
+ `gs` is a Future[ShipmentView], which takes as long to complete as it takes for the `ReceivingHttpClient` actor to send a reply. Since futures form Monads (i.e. they have a method called `flatMap`), we can manipulate and combine several Futures in a 'Monadic Flow', which results in a Future containing our final result. In this case, we want to `ask` the `ReceivingHttpClient`, the `InventoryHttpClient` and the `ProductHttpClient` for the responses we'll need to create a combined response that displays the status of the Shipment, along with the status of the Product in Inventory, and the Product details. `mapToReceivingSummaryView` is a function that takes the responses from each of the Http Client actors (a `ShipmentView`, an `InventoryItemView` and a `ProductView`)  and combines them to create a `ReceivingSummaryView`, the response that will be returned to the sender.
  
  Finally, Akka provides a `pipe` pattern to send the result of the `Future[ReceivingSummaryView]` to the sender, in this case, the Akka HTTP REST API. It is important to note that this is the point at which the Future blocks. The `pipe` pattern waits for the Future to complete, before sending the result, a naked `ReceivingSummaryView` to the sender. Putting this all together, gives us:
   
@@ -72,13 +72,55 @@ class ReceivingOrchestrator(timeout: Timeout) extends Actor {
 
 ```
 
-Not bad, so far. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to get tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. The code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract this away into a set of reusable client API traits.
+Not bad, so far. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to become tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. The code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract this away into a set of reusable client API traits.
 
 ### The client APIs
 
+A clean design that would achieve this, would be to separate the `ask` calls into a series of traits - one for each HTTP Client actor. So, where before getting a `Future[SomeResponseView]` would be done with the `ask` pattern and a child actor, the `ReceivingOrchestrator` would simply mix in the client trait and call a method like `getShipment(shipmentId)`. The HTTP Client actor would also be instantiated in the trait. Here is the `ReceivingApi` trait as an example:
 
+```scala
+
+trait ReceivingApi { this: Actor =>  
+  import akka.pattern.ask
+  // other imports...
+
+  implicit def executionContext: ExecutionContext
+  implicit def timeout: Timeout
+
+  val receivingClient = context.actorOf(ReceivingHttpClient.props)
+
+  def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
+    receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
+
+  def createShipment(productId: ProductRef, ordered: ZonedDateTime, count: Int): Future[HttpClientResult[ShipmentView]] =
+    receivingClient.ask(CreateShipment(productId, ordered, count)).mapTo[HttpClientResult[ShipmentView]]
+
+  // Other calls to receivingClient
+}
+
+```
+
+Similarly, a trait for each of the `ProductHttpClient` and `InventoryHttpClient` actors need to be created. All three traits are mixed into the `ReceivingOrchestrator` actor. The result is a much cleaner coordinate actor:
+
+```
+class ReceivingOrchestrator extends Actor 
+  import akka.pattern.pipe
+  // other imports...
+  
+  def receive = {
+    case GetShipmentSummary(sid) =>      
+      val result = for {
+        gs <- getShipment(sid)  // each call to an HTTP Client is replaced with a method call to the API trait
+        gi <- getInventoryItem(ProductRef(gs.productId))
+        gp <- getProductByProductId(gs.productId)
+      } yield mapToReceivingSummaryView(gs, gi, gp)
+
+      result.pipeTo(sender()) // complete the Future and send the results to the sender
+  }
+```
 
 ### Handling errors from the HTTP clients
+
 
 
 #### The EitherT Monad Transformer from Cats
