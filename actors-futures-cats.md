@@ -17,11 +17,11 @@ The Orchestrator module is the heart of e-commerce. Its REST API is the top-leve
 
 A good way to structure a solution to a problem like this, is to create a coordinating actor (in this case, an Orchestrator) for each use case (or, each group of related use cases). The coordinating actor, in turn, has several HTTP Client actors as its children, each representing a microservice.  When the coordinator itself, receives a message to execute a use case, it sends a message to HTTP Client actors representing the relevant microservices. Each HTTP Client actor is, in turn, responsible for managing an HTTP request to a microservice. Each HTTP Client actor then returns a message representing a microservice response to the Orchestrator, which then combines and manipulates the responses to create final response that represents the complete use case. The Orchestrator then returns its response as a message to the Orchestrator REST API.
 
-#### (needs a diagram of the actor tree)
+#### (a diagram of the actor tree)
 
 A caveat to all this, is that composing such a solutuon when working on a non-trivial project means managing complexity. Requests to web services aren't always successful, so error handling is required. Managing concurrency in a production-bound application isn't always straight forward. And, finally, the code required to deal with all this can get a little unwieldy for one little actor class. 
 
-This post will explore building out the solution step-by-step. Finer design considerations and the tools to address them will be introduced along the way. We will consider a design to address the complexity of managing concurrency and error handling. The code for this can get a little unwieldly, so we'll take a look at [Cats](http://typelevel.org/cats/), a lightweight, modular library that will help manage this complexity through a functional programming approach. We'll also explore how best practices and refactoring out abstractions make our code more manageable and easier to understand. Finally, we'll take a deeper look at how to manage concurrency in a an Akka application, and see how a custom dispatcher can help manage this better.
+This post will explore building out the solution step-by-step. Finer design considerations and the tools to address them will be introduced along the way. We will consider a design to address the complexity of managing concurrency and error handling. The code for this can get a little unwieldly, so we'll take a look at [Cats](http://typelevel.org/cats/), a lightweight, modular library that will help manage this complexity through a functional programming approach. We'll also explore how best practices and refactoring out abstractions make our code more manageable and easier to understand. Finally, we'll take a deeper look at how to manage concurrency in a an Akka application, and see how a custom dispatcher can help.
 
 ### The basic structure
 
@@ -53,9 +53,20 @@ Working with Futures in actors is pretty straight forward. The `ReceivingOrchest
  ```scala
  
  val gs: Future[ShipmentView] = receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]
+ 
  ```
  
- `gs` is a Future[ShipmentView], which takes as long to complete as it takes for the `ReceivingHttpClient` actor to send a reply. Since futures form Monads (i.e. they have a method called `flatMap`), we can manipulate and combine several Futures in a 'Monadic Flow', which results in a Future containing our final result. In this case, we want to `ask` the `ReceivingHttpClient`, the `InventoryHttpClient` and the `ProductHttpClient` for the responses we'll need to create a combined response that displays the status of the Shipment, along with the status of the Product in Inventory, and the Product details. `mapToReceivingSummaryView` is a function that takes the responses from each of the Http Client actors (a `ShipmentView`, an `InventoryItemView` and a `ProductView`)  and combines them to create a `ReceivingSummaryView`, the response that will be returned to the sender.
+ `gs` is a Future[ShipmentView], which takes as long to complete as it takes for the `ReceivingHttpClient` actor to send a reply. Since futures form [Monads](https://en.wikipedia.org/wiki/Monad_(functional_programming)) (i.e. they have a method called `flatMap`), we can manipulate and combine several Futures in a 'Monadic flow', which results in a Future containing our final result. In this case, we want to `ask` the `ReceivingHttpClient`, the `InventoryHttpClient` and the `ProductHttpClient` for the responses we'll need to create a combined response that displays the status of the Shipment, along with the status of the Product in Inventory, and the Product details. Each of these `ask`s is represented as a Future. `mapToReceivingSummaryView` is a function that takes the responses from each of the Http Client actors (a `ShipmentView`, an `InventoryItemView` and a `ProductView`)  and combines them to create a `ReceivingSummaryView`, the response that will be returned to the sender. The result will, itself, be a Future. So, our Monadic flow looks something like:
+ 
+ ```scala
+ 
+ val result: Future[ReceivingSummaryView] = for {
+         gs <- receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]  // each call returns a Future with a response
+         gi <- inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[InventoryItemView]
+         gp <- productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[ProductView]
+       } yield mapToReceivingSummaryView(gs, gi, gp)
+       
+ ```
  
  Finally, Akka provides a `pipe` pattern to send the result of the `Future[ReceivingSummaryView]` to the sender, in this case, the Akka HTTP REST API. It is important to note that this is the point at which the Future blocks. The `pipe` pattern waits for the Future to complete, before sending the result, a naked `ReceivingSummaryView` to the sender. Putting this all together, gives us:
   
@@ -75,31 +86,30 @@ class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
 
   def receive = {
     case GetShipmentSummary(sid) =>
-
-      // A Monadic flow to combine the results of the returned messages.
-      val result = for {
+      val result: Future[ReceivingSummaryView] = for {
         gs <- receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]  // each call returns a Future with a response
         gi <- inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[InventoryItemView]
         gp <- productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[ProductView]
       } yield mapToReceivingSummaryView(gs, gi, gp)
 
-      result.pipeTo(sender()) // complete the Future and send the results to the sender
+      // pipe pattern to complete the Future and send the results to the sender
+      result.pipeTo(sender()) 
   }
 }
 ```
 
-Not bad, so far. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to become tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. The code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract this away into a set of reusable client API traits.
-
-# move traits refactor to after Cats...
-# final paragraph of this section should lead into Error Handling...
-
+This solves the core problem. We've composed a basic structure that:
++ Constructs a coordinating actor with HTTP Client actors as children
++ Creates a Future for each microservice request using the `ask` pattern
++ Combines the Futures representing the microservice requests into a single Future of the final response using a Monadic flow
++ Completes the Future and sends the final response to the sender using the `pipe`
 
 ### Handling errors from the HTTP clients
 
-All of this is still too much of a perfect world. The solution, thus far, doens't acccount for the microservices returning errors for resources not found or internal server errors. As it turns out, the HTTP Client actors _do_ return responses that handle error scenarios. Specifically, they return a type of `HttpClientResult[T]`, which is simply a type alias for `Either[HttpClientError, T]`. The `Left` of the `Either` is of type `HttpClientError`, while the `Right` contains a successful response. This means that we need to update our client APIs to account for this. The `mapTo` in our API traits needs to be modified to return the `HttpClientResult[T]` type:
+All of this is just a little too "perfect world."  The solution, thus far, doens't acccount for the microservices returning errors for resources not found, internal server errors or any multitude of reasons. As it turns out, the HTTP Client actors _do_ return responses that handle error scenarios. Specifically, they return a type of `Either[HttpClientError, T]`. The `Left` of the `Either` is of type `HttpClientError`, while the `Right` contains a successful response `[T]`. 
 
 ```scala
-def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
+def getShipment(shipmentId: ShipmentRef): Future[Either[HttpClientError, ShipmentView]] =
     receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
 ```
 
@@ -153,7 +163,9 @@ class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
 }
 ```
 
-# final para here describes need to refactor, set up "The Client APIs" section...
+# rework this last paragraph before "The client APIs"...
+
+Not bad, so far. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to become tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. The code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract this away into a set of reusable client API traits.
 
 ### The client APIs
 
