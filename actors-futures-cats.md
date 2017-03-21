@@ -13,20 +13,28 @@ The Orchestrator module is the heart of e-commerce. Its REST API is the top-leve
 
 A good way to structure a solution to a problem like this, is to create a coordinating actor for each group of related use cases. The coordinating actor would then have an HTTP Client actor for each microservice that it needs to call. The HTTP Client actors are thus children of the coordinating actor. The coordinating actor will make calls to each of the child actors necessary for a given request, and then combine the resulting Futures to create the response to be returned to the Orchestrator REST API.
 
-A caveat to all this, is that composing such a solutuon when working on a non-trivial project requires managing complexity. Calls to web services aren't always successful, so error handling is required. Managing concurrency in a production-bound project isn't always straigh forward. And, finally, the code required to deal with all this can get a little unwieldy for one little actor class. It's going to take a couple of passes to get this done.
+A caveat to all this, is that composing such a solutuon when working on a non-trivial project means managing complexity. Calls to web services aren't always successful, so error handling is required. Managing concurrency in a production-bound project isn't always straigh forward. And, finally, the code required to deal with all this can get a little unwieldy for one little actor class. It's going to take a couple of passes to get this done.
 
 ### The basic structure
 
 The `ReceivingActor`, which we will use as the example for this exercise, will handle the use cases relevant to the Receiving department of ecommerce. The `ReceivingActor` requires three HTTP Client actors as children - an `InventoryHttpClient` for the Inventory microservice, a `ProductHttpClient` for Product, and a `ReceivingHttpClient` for Receiving. So a start to the `ReceivingOrchestrator` might look something like this:
 
 ```scala
-class ReceivingOrchestrator extends Actor {
+import akka.actor.{Actor, Props}
+import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 
-  def inventoryClient = context.actorOf(InventoryHttpClient.props)
-  def productClient = context.actorOf(ProductHttpClient.props)
+class ReceivingOrchestrator(implicit val timeout: Timeout) extends Actor { // The Timeout sets the time in which Futures must complete
+
+  implicit def executionContext: ExecutionContext = context.dispatcher  // The ExecutionContext for completing the Futures
+
+  val inventoryClient = context.actorOf(InventoryHttpClient.props)
+  val productClient = context.actorOf(ProductHttpClient.props)
   val receivingClient = context.actorOf(ReceivingHttpClient.props)
-  
+
   def receive = ???
+
 }
 ```
 
@@ -44,35 +52,94 @@ Working with Futures in actors is pretty straight forward. The `ReceivingOrchest
   
 
 ```scala
-
-class ReceivingOrchestrator(timeout: Timeout) extends Actor {
+class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {  
   import akka.pattern.ask
   import akka.pattern.pipe
   // other imports...
 
-  implicit def executionContext = context.dispatcher // the ExecutionContext to run the Futures
+  implicit def executionContext: ExecutionContext = context.dispatcher 
 
   // the ActorRefs of the HttpClient actors
-  def inventoryClient = context.actorOf(InventoryHttpClient.props)
-  def productClient = context.actorOf(ProductHttpClient.props)
+  val inventoryClient = context.actorOf(InventoryHttpClient.props)
+  val productClient = context.actorOf(ProductHttpClient.props)
   val receivingClient = context.actorOf(ReceivingHttpClient.props)
 
   def receive = {
-    case GetShipmentSummary(sid) =>      
+    case GetShipmentSummary(sid) =>
+
       // A Monadic flow to combine the results of the returned messages.
       val result = for {
-        gs <- receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]  // each call returns a Future with an HTTP Client response
+        gs <- receivingClient.ask(GetShipment(sid)).mapTo[ShipmentView]  // each call returns a Future with a response
         gi <- inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[InventoryItemView]
         gp <- productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[ProductView]
       } yield mapToReceivingSummaryView(gs, gi, gp)
-      
+
       result.pipeTo(sender()) // complete the Future and send the results to the sender
   }
 }
-
 ```
 
 Not bad, so far. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to become tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. The code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract this away into a set of reusable client API traits.
+
+
+### Handling errors from the HTTP clients
+
+All of this is still too much of a perfect world. The solution, thus far, doens't acccount for the microservices returning errors for resources not found or internal server errors. As it turns out, the HTTP Client actors _do_ return responses that handle error scenarios. Specifically, they return a type of `HttpClientResult[T]`, which is simply a type alias for `Either[HttpClientError, T]`. The `Left` of the `Either` is of type `HttpClientError`, while the `Right` contains a successful response. This means that we need to update our client APIs to account for this. The `mapTo` in our API traits needs to be modified to return the `HttpClientResult[T]` type:
+
+```scala
+def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
+    receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
+```
+
+
+
+#### The EitherT Monad Transformer from Cats
+
+```scala
+class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
+  
+  ...
+  
+  def receive = {
+    case GetShipmentSummary(sid) =>
+      val result = for {
+        gs <- EitherT(receivingClient.ask(GetShipment(sid)).mapTo[Either[HttpClientError, ShipmentView]])
+        gi <- EitherT(inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[Either[HttpClientError, InventoryItemView]])
+        gp <- EitherT(productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[Either[HttpClientError, ProductView]])
+      } yield mapToReceivingSummaryView(gs, gi, gp)
+
+      result.value.pipeTo(sender()) 
+  }
+}
+```
+
+#### Other things Cats can do
+
+```scala
+class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
+  
+  ...
+  
+  def receive = {
+    case GetShipmentSummary(sid) =>
+      val result = for {
+        gs <- EitherT(receivingClient.ask(GetShipment(sid)).mapTo[Either[HttpClientError, ShipmentView]])
+        gi <- EitherT(inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[Either[HttpClientError, InventoryItemView]])
+        gp <- EitherT(productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[Either[HttpClientError, ProductView]])
+      } yield mapToReceivingSummaryView(gs, gi, gp)
+
+      result.value.pipeTo(sender()) 
+
+    case ReceivingOrchestrator.AcceptShipment(pid, sid, d, c) =>
+      val as = EitherT(receivingClient.ask(ReceivingProtocol.AcceptShipment(sid)).mapTo[HttpClientResult[ShipmentView]])
+      val rs = EitherT(inventoryClient.ask(ReceiveSupply(pid, sid, d, c)).mapTo[HttpClientResult[InventoryItemView]])
+      val gp = EitherT(productClient.ask(GetProductByProductId(pid)).mapTo[Either[HttpClientError, ProductView]])
+      val result = Applicative[EitherT[Future, HttpClientError, ?]].map3(as, rs, gp)(mapToReceivingSummaryView)
+
+      result.value.pipeTo(sender())
+  }
+}
+```
 
 ### The client APIs
 
@@ -80,7 +147,7 @@ A clean design that would achieve this, would be to separate the `ask` calls int
 
 ```scala
 
-trait ReceivingApi { this: Actor =>  
+trait ReceivingApi { this: Actor =>
   import akka.pattern.ask
   // other imports...
 
@@ -90,12 +157,12 @@ trait ReceivingApi { this: Actor =>
   val receivingClient = context.actorOf(ReceivingHttpClient.props)
 
   def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
-    receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
+    receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]  
 
-  def createShipment(productId: ProductRef, ordered: ZonedDateTime, count: Int): Future[HttpClientResult[ShipmentView]] =
-    receivingClient.ask(CreateShipment(productId, ordered, count)).mapTo[HttpClientResult[ShipmentView]]
+  def acknowledgeShipment(shipmentId: ShipmentRef, expectedDelivery: ZonedDateTime): Future[HttpClientResult[ShipmentView]] =
+    receivingClient.ask(AcknowledgeShipment(shipmentId, expectedDelivery)).mapTo[HttpClientResult[ShipmentView]]
 
-  // Other calls to receivingClient
+  // other calls to receiving Http Client actor...
 }
 
 ```
@@ -103,33 +170,64 @@ trait ReceivingApi { this: Actor =>
 Similarly, a trait for each of the `ProductHttpClient` and `InventoryHttpClient` actors need to be created. All three traits are mixed into the `ReceivingOrchestrator` actor. The result is a much cleaner coordinate actor:
 
 ```
-class ReceivingOrchestrator extends Actor 
-  import akka.pattern.pipe
-  // other imports...
-  
-  def receive = {
-    case GetShipmentSummary(sid) =>      
-      val result = for {
-        gs <- getShipment(sid)  // each call to an HTTP Client is replaced with a method call to the API trait
-        gi <- getInventoryItem(ProductRef(gs.productId))
-        gp <- getProductByProductId(gs.productId)
-      } yield mapToReceivingSummaryView(gs, gi, gp)
-
-      result.pipeTo(sender()) // complete the Future and send the results to the sender
-  }
+class ReceivingOrchestrator(implicit val timeout: Timeout) extends Actor
+   with InventoryApi
+   with ProductApi
+   with ReceivingApi {
+   import akka.pattern.pipe
+   // other imports...
+ 
+   implicit def executionContext: ExecutionContext = context.dispatcher 
+ 
+   def receive = {
+     case GetShipmentSummary(sid) =>
+       val result = for {
+         gs <- EitherT(getShipment(sid))  // each call to an HTTP Client is replaced with a method call to the API trait
+         gi <- EitherT(getInventoryItem(ProductRef(gs.productId)))
+         gp <- EitherT(getProductByProductId(ProductRef(gs.productId)))
+       } yield mapToReceivingSummaryView(gs, gi, gp)
+ 
+       result.value.pipeTo(sender()) 
+ 
+     case AcceptShipment(pid, sid, d, c) =>
+       val as = EitherT(acceptShipment(sid))
+       val rs = EitherT(receiveSupply(pid, sid, d, c))
+       val gp = EitherT(getProductByProductId(pid))
+       val result = Applicative[EitherT[Future, HttpClientError, ?]].map3(as, rs, gp)(mapToReceivingSummaryView)
+       
+       result.value.pipeTo(sender())
+   }
+ }
 ```
 
-### Handling errors from the HTTP clients
-
-
-
-#### The EitherT Monad Transformer from Cats
-
-
-#### Other things Cats can do
 
 
 ### Creating and configuring a blocking dispatcher
+
+```json
+orchestrator-dispatcher {
+  type = Dispatcher
+  executor = "thread-pool-executor"
+  thread-pool-executor {
+    // this configuration is as of Akka 2.4.2
+    fixed-pool-size = 16
+  }
+  throughput = 100
+}
+```
+
+```
+class ReceivingOrchestrator(implicit val timeout: Timeout) extends Actor
+   with InventoryApi
+   with ProductApi
+   with ReceivingApi {
+   import akka.pattern.pipe
+   // other imports...
+ 
+   implicit def executionContext = context.system.dispatchers.lookup("orchestrator-dispatcher")
+   
+ 
+```
 
 
 
