@@ -1,4 +1,4 @@
-## Combining web service requests with Actors and Futures 
+## Combining microservice requests with Actors and Futures 
 
 Akka actors and Scala `Future`s are effective tools for creating concurrent applications. Scala Futures are concurrent functions, and provide a way to maninpulate and combine concurrent tasks without blocking (or, as we'll see later, provide a way to isolate and postpone blocking). Akka actors are essentially lightweight, distributed objects representing concurrent state. Combining the two yields a powerful tool-set for simplifying managing concurrent tasks. 
 
