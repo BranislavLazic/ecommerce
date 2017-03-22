@@ -102,20 +102,34 @@ This solves the core problem. We've composed a basic structure that:
 + Constructs a coordinating actor with HTTP Client actors as children
 + Creates a Future for each microservice request using the `ask` pattern
 + Combines the Futures representing the microservice requests into a single Future of the final response using a Monadic flow
-+ Completes the Future and sends the final response to the sender using the `pipe`
++ Completes the resulting Future and sends the final response to the sender using the `pipe` pattern
 
 ### Handling errors from the HTTP clients
 
-All of this is just a little too "perfect world."  The solution, thus far, doens't acccount for the microservices returning errors for resources not found, internal server errors or any multitude of reasons. As it turns out, the HTTP Client actors _do_ return responses that handle error scenarios. Specifically, they return a type of `Either[HttpClientError, T]`. The `Left` of the `Either` is of type `HttpClientError`, while the `Right` contains a successful response `[T]`. 
+All of this is just a little too "perfect world."  The solution, thus far, doens't acccount for the microservices returning errors for resources not found, internal server errors or any multitude of reasons. As it turns out, the HTTP Client actors _do_ return responses that handle error scenarios. Specifically, they return a type of `Either[HttpClientError, T]`. The `Left` of the `Either` is of type `HttpClientError`, while the `Right` contains a successful response `[T]`. Therefore, an `ask` for a microservice response is going to look more like:
+
 
 ```scala
-def getShipment(shipmentId: ShipmentRef): Future[Either[HttpClientError, ShipmentView]] =
-    receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]
+
+val gs: Future[Either[HttpClientError, ShipmentView]] = receivingClient.ask(GetShipment(sid)).mapTo[Either[HttpClientError, ShipmentView]]
+
 ```
 
-
+The problem becomes one of how to use the result of such a call in a Monadic flow. `Either` is also a Monad, just like `Future`. A `Future[Either[A, B]]` is a Monad inside a Monad. And, because they're Monads of different types, one`flatMap` alone, or `join` won't work. We would have to nest `flatMap` calls two-deep: once to get inside the `Future`, and once again to get inside the `Either`. While this is doable, it would be quite tricky as a coding exercise, and ultimately would dedicate more effort to nested Monads, than to the problem we're trying to solve. We need some construct outside the standard Scala library.
 
 #### The EitherT Monad Transformer from Cats
+
+[Cats](http://typelevel.org/cats/) is a library that provides type classes and algebraic data types that serve as abstractions for functional programming. A full discussion of Cats and functional structures is beyond the scope of this post, but if you're the type to take a deep dive, the Cats documentation, as well as _[Functional Programming in Scala](https://www.manning.com/books/functional-programming-in-scala)_ by Paul Chiusano and Runar Bjarnason are a worthwhile read. 
+
+The data type from the Cats library that will help here, is the `EitherT`. `EitherT` is a monad transformer for the `Either` Monad, and any other Monad of choice used to wrap the `Either`. Since this problem deals with an `Either` wrapped in a `Future`, an `EitherT[Future, HttpClientError, T]` will work well. The `apply` of `EitherT` creates an instance of the Monad Transformer:
+
+```scala
+
+val gs: EitherT[Future, HttpClientError, ShipmentView] = EitherT(receivingClient.ask(GetShipment(sid)).mapTo[Either[HttpClientError, ShipmentView]])
+```
+
+The magic of `EitherT` is its `flatMapF` method, which cuts through both Monad layers, working like `flatMap` on our original `Future`. The original `Future[Either]]` construct inside `EitherT` is accessed by `EitherT.value`. This allows us to deal with the `Either[HttpClientError, T]` returned by the HTTP Client actors with a Monadic flow, just as we did with plain `Future`s. The result is a clean, concise solution, that is (just about) as readable as the solution before we introduced error handling:
+
 
 ```scala
 class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
@@ -125,11 +139,14 @@ class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
   def receive = {
     case GetShipmentSummary(sid) =>
       val result = for {
+      
+      // wrap the 'ask' call with EitherT.apply
         gs <- EitherT(receivingClient.ask(GetShipment(sid)).mapTo[Either[HttpClientError, ShipmentView]])
         gi <- EitherT(inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[Either[HttpClientError, InventoryItemView]])
         gp <- EitherT(productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[Either[HttpClientError, ProductView]])
       } yield mapToReceivingSummaryView(gs, gi, gp)
 
+      // access the [Future[Either[A, B]] inside the EitherT via result.value before piping to sender
       result.value.pipeTo(sender()) 
   }
 }
@@ -137,6 +154,12 @@ class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
 
 #### Other things Cats can do
 
+The Monad is a powerful functional proramming construct. Monadic flows allow us to string a series of `flatMap`s together, while accessing the context of the Monads involved to "decide" what should happen in the next `flatMap`. In the above example, the second `flatMap` gets a Product based on the productId from the Shipment aquired by the first `flatMap`. The Product returned by the second `flatMap` is a decided by the context of the first `flatMap`. 
+
+This power isn't always necessary. For example, what if we don't need to decide flow control. In the Accept Shipment use case, three microservice responses are simply combined independent of any knowledge of their contents. Following the principle of least power, the Cats library provides a type class called `Applicative`. Applicative is less powerful than Monad, and doesn't have `flatMap`. It does, however, have a series of `map` methods, with arity of `map` through `map22`. Since the Accept Shipment use case requires combining three responses, `Applicative.map3(fa, fb, fc)(f: (a, b, c) => d)`. In our case, `map3` needs three `EitherT`s and function that takes three arguments - the `mapToReceivingSummaryView` that we've been using all along:
+
+Using this approach yields:
+
 ```scala
 class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
   
@@ -144,18 +167,17 @@ class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
   
   def receive = {
     case GetShipmentSummary(sid) =>
-      val result = for {
-        gs <- EitherT(receivingClient.ask(GetShipment(sid)).mapTo[Either[HttpClientError, ShipmentView]])
-        gi <- EitherT(inventoryClient.ask(GetItem(ProductRef(gs.productId))).mapTo[Either[HttpClientError, InventoryItemView]])
-        gp <- EitherT(productClient.ask(GetProductByProductId(ProductRef(gs.productId))).mapTo[Either[HttpClientError, ProductView]])
-      } yield mapToReceivingSummaryView(gs, gi, gp)
-
-      result.value.pipeTo(sender()) 
+      
+      ...
 
     case ReceivingOrchestrator.AcceptShipment(pid, sid, d, c) =>
+    
+      // retrieve each EitherT with a discreet 'ask'
       val as = EitherT(receivingClient.ask(ReceivingProtocol.AcceptShipment(sid)).mapTo[HttpClientResult[ShipmentView]])
       val rs = EitherT(inventoryClient.ask(ReceiveSupply(pid, sid, d, c)).mapTo[HttpClientResult[InventoryItemView]])
       val gp = EitherT(productClient.ask(GetProductByProductId(pid)).mapTo[Either[HttpClientError, ProductView]])
+      
+      // Use the Applicative to apply the EitherT's to mapToReceivingSummaryView
       val result = Applicative[EitherT[Future, HttpClientError, ?]].map3(as, rs, gp)(mapToReceivingSummaryView)
 
       result.value.pipeTo(sender())
@@ -163,25 +185,27 @@ class ReceivingOrchestrator(implicit timeout: Timeout) extends Actor {
 }
 ```
 
-# rework this last paragraph before "The client APIs"...
-
-Not bad, so far. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to become tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. The code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract this away into a set of reusable client API traits.
+Not bad, so far. We have workable structure that combines multiple, concurrent requests to microservices. We've also used Cats to provide an elegant approach to handling concurrency and error handling simultaneously. But, if we're going to be doing a lot of this, all those HTTP Client calls are going to become tedious and repetitive. The HTTP Client actors are going to be reused in other groupings of use cases, meaning that the current path is one to code duplication. The `ShoppingOrchestrator`, for example, will also use the `ProductHttpClient` and the `InventoryHttpClient` actors. Also, the code to prepare the messages and do the asking gets a cumbersome and in the way. It would be nice to abstract away the child actors and `ask` pattern into a set of reusable client API traits.
 
 ### The client APIs
 
-A clean design that would achieve this, would be to separate the `ask` calls into a series of traits - one for each HTTP Client actor. So, where before getting a `Future[SomeResponseView]` would be done with the `ask` pattern and a child actor, the `ReceivingOrchestrator` would simply mix in the client trait and call a method like `getShipment(shipmentId)`. The HTTP Client actor would also be instantiated in the trait. Here is the `ReceivingApi` trait as an example:
+A clean design that to achieve this, would be to separate the `ask` calls into a series of traits - one for each HTTP Client actor. Where, before, getting a `Future[SomeResponseView]` would be done with the `ask` pattern and a child actor, the `ReceivingOrchestrator` would simply mix in the client trait and call a method like `getShipment(shipmentId)`. The HTTP Client actor would also be instantiated in the trait. Here is the `ReceivingApi` trait as an example:
 
 ```scala
 
-trait ReceivingApi { this: Actor =>
+trait ReceivingApi { this: Actor =>  // makes Actor characteristics available to this trait
   import akka.pattern.ask
   // other imports...
 
+  // the ExecutionContext and Timeout are still implemented in the ReceivingActor class
   implicit def executionContext: ExecutionContext
   implicit def timeout: Timeout
 
+  // each child actor instance is moved to its trait
   val receivingClient = context.actorOf(ReceivingHttpClient.props)
 
+  // these were the same 'ask' statements in the ReceivingActor, implemented here as methods
+  // that take the message contents from the actor as parameters
   def getShipment(shipmentId: ShipmentRef): Future[HttpClientResult[ShipmentView]] =
     receivingClient.ask(GetShipment(shipmentId)).mapTo[HttpClientResult[ShipmentView]]  
 
@@ -193,13 +217,14 @@ trait ReceivingApi { this: Actor =>
 
 ```
 
-Similarly, a trait for each of the `ProductHttpClient` and `InventoryHttpClient` actors need to be created. All three traits are mixed into the `ReceivingOrchestrator` actor. The result is a much cleaner coordinate actor:
+Similarly, a client API trait is created for each of the `ProductHttpClient` and `InventoryHttpClient` actors. All three traits are mixed into the `ReceivingOrchestrator` actor. Where  The result is a much cleaner coordinator actor:
 
 ```
 class ReceivingOrchestrator(implicit val timeout: Timeout) extends Actor
-   with InventoryApi
+   with InventoryApi  // The client API traits are mixed into the ReceivingOrchestrator actor
    with ProductApi
    with ReceivingApi {
+   
    import akka.pattern.pipe
    // other imports...
  
@@ -230,6 +255,10 @@ class ReceivingOrchestrator(implicit val timeout: Timeout) extends Actor
 
 ### Creating and configuring a blocking dispatcher
 
+There is one last nut left to crack before we can call it a day. As discussed, the `pipeTo` statement is the point at which the Future blocks. The actor has to wait on the current thread until the Future completes, before the combined response is returned to the sender. Up till now, the `ReceivingOrchestrator` has been using the context.dispatcher to complete Futures. The problem with this, is that the `context.dispatcher` serves as the same Execution Context as the routing infrastructure that the Akka system uses to coordinate communication between actors. If too many threads are blocked in this way, the actor system itself is starved, and the benefit of Akka as a concurrency management runtime is lost. The actor might perform well in unit tests, but performance under load would be uncertain.
+
+The solution to this problem is to configure a custom blocking dispatcher file, and use it in place of the context.dispatcher in the `ReceivingOrchestrator`. The actor system allows for a lookup of custom configured dispatchers with a call to `system.dispatcher.lookup("dispatcher-name")`. We'll call our dispatcher `orchestrator-dispatcher` and configure it in the application.conf file:
+
 ```json
 orchestrator-dispatcher {
   type = Dispatcher
@@ -241,6 +270,8 @@ orchestrator-dispatcher {
   throughput = 100
 }
 ```
+
+Replacing the context.dispatcher with the custom `orchestrator-dispatcher` in the `ReceivingActor` means that blocking is now isolated to a dedicated dispatcher:
 
 ```
 class ReceivingOrchestrator(implicit val timeout: Timeout) extends Actor
@@ -255,7 +286,8 @@ class ReceivingOrchestrator(implicit val timeout: Timeout) extends Actor
  
 ```
 
+The Akka documentation provides a [thorogh examination[(http://doc.akka.io/docs/akka-http/10.0.0/scala/http/handling-blocking-operations-in-akka-http-routes.html) of this topic. For now, the `ReceivingOrchestrator` is ready to call microservices and process requests for the Receiving Department of ecommerce.
+
+
 ### And that's a wrap!
 
-# Summarize what the article is about...
-# Consider adding links to documentation resources here..
